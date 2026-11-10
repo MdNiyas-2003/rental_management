@@ -5,3 +5,7 @@ node_modules/
 dist/
 build/
 .DS_Store
+.agents/
+.claude/
+.cursor/
+.devin/
