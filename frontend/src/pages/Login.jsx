@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Eye, EyeOff, CarFront, ShieldCheck } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  CarFront,
+  ShieldCheck,
+} from "lucide-react";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -14,14 +19,12 @@ function Login() {
 
     if (!email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    } else if (!/^[^\s@]+@[^\s@]+.[^\s@]+$/.test(email)) {
       newErrors.email = "Enter a valid email address";
     }
 
     if (!password) {
       newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
@@ -30,184 +33,302 @@ function Login() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (!validateForm()) return;
 
     setLoading(true);
 
-    // Temporary UI testing only. Real authentication will be connected to the Express API later.
-    setTimeout(() => {
-      setLoading(false);
-      alert(
-        `Login form validated successfully!\nEmail: ${email}\nRemember me: ${rememberMe}`
-      );
-    }, 1000);
+    const isValidLogin =
+      email.trim().toLowerCase() === "admin@driveflow.com" &&
+      password === "admin123";
+
+    if (isValidLogin) {
+      window.location.href = "/dashboard";
+      return;
+    }
+
+    setLoading(false);
+    setErrors({
+      general: "Invalid email or password. Please try again.",
+    });
   };
 
-  const inputClass =
-    "h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100";
+  const inputStyle = {
+    display: "block",
+    visibility: "visible",
+    width: "100%",
+    height: "46px",
+    boxSizing: "border-box",
+    border: "1px solid #dbe2ea",
+    borderRadius: "9px",
+    backgroundColor: "#ffffff",
+    color: "#1e293b",
+    padding: "0 14px",
+    fontFamily: "Montserrat, sans-serif",
+    fontSize: "13px",
+    outline: "none",
+    opacity: 1,
+  };
+
+  const labelStyle = {
+    display: "block",
+    visibility: "visible",
+    marginBottom: "9px",
+    color: "#334155",
+    fontSize: "12px",
+    fontWeight: 600,
+  };
 
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-white font-sans md:grid-cols-2">
-      {/* Left branding section */}
-      <section className="hidden flex-col justify-between bg-[#101d35] px-10 py-10 text-white lg:flex xl:px-14">
-        <div className="flex items-center gap-3">
-          <div className="flex rounded-xl bg-blue-600 p-2.5">
-            <CarFront size={28} />
-          </div>
-          <h2 className="text-2xl font-bold tracking-wide">DriveFlow</h2>
-        </div>
+    <main className="flex min-h-screen items-center justify-center bg-[#f1f4f9] px-4 py-8 font-['Montserrat']">
 
-        <div className="max-w-xl">
-          <span className="text-xs font-bold tracking-[0.2em] text-blue-300">
-            VEHICLE RENTAL MANAGEMENT
-          </span>
+      {/* MAIN CENTERED CARD */}
+      <div className="grid min-h-[620px] w-full max-w-[1100px] grid-cols-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_25px_70px_rgba(15,23,42,0.12)] md:grid-cols-2">
 
-          <h1 className="my-6 text-4xl font-bold leading-tight xl:text-5xl">
-            Manage your fleet.
-            <br />
-            Drive your business
-            <br />
-            forward.
-          </h1>
+        {/* LEFT BRANDING PANEL */}
+        <section className="flex flex-col justify-between bg-[#101827] px-8 py-9 text-white sm:px-11 sm:py-11 lg:px-14">
 
-          <p className="max-w-md text-[15px] leading-8 text-slate-300">
-            A smarter way to manage vehicles, bookings, customers and your entire rental operation.
-          </p>
-
-          <div className="mt-9 flex items-center gap-3 text-sm text-slate-200">
-            <ShieldCheck size={20} className="shrink-0" />
-            <span>Secure and centralized fleet management</span>
-          </div>
-        </div>
-
-        <p className="text-xs text-slate-400">
-          © 2026 DriveFlow. All rights reserved.
-        </p>
-      </section>
-
-      {/* Right login section */}
-      <section className="flex min-h-screen items-center justify-center px-6 py-10 sm:px-10 lg:px-12">
-        <div className="w-full max-w-[420px]">
-          {/* Mobile branding */}
-          <div className="mb-12 flex items-center gap-2.5 text-[#17243b] lg:hidden">
-            <CarFront size={29} className="text-blue-600" />
-            <h2 className="text-2xl font-bold">DriveFlow</h2>
-          </div>
-
-          <div className="mb-8">
-            <span className="text-xs font-bold tracking-[0.15em] text-blue-600">
-              WELCOME BACK
-            </span>
-            <h1 className="mt-3 text-2xl font-bold text-[#17243b] sm:text-[28px]">
-              Sign in to your account
-            </h1>
-            <p className="mt-2 text-sm text-slate-500">
-              Enter your credentials to access DriveFlow.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} noValidate className="space-y-5">
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="mb-2 block text-[13px] font-semibold text-slate-700">
-                Email Address <span className="ml-1 text-red-600">*</span>
-              </label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
-                }}
-                placeholder="name@company.com"
-                autoComplete="email"
-                className={`${inputClass} ${errors.email ? "border-red-500 focus:border-red-500 focus:ring-red-100" : ""}`}
-                aria-invalid={Boolean(errors.email)}
-                aria-describedby={errors.email ? "email-error" : undefined}
-              />
-              {errors.email && (
-                <p id="email-error" className="mt-1.5 text-xs text-red-600">
-                  {errors.email}
-                </p>
-              )}
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 shadow-lg shadow-blue-600/20">
+              <CarFront size={24} />
             </div>
 
-            {/* Password */}
-            <div>
-              <label htmlFor="password" className="mb-2 block text-[13px] font-semibold text-slate-700">
-                Password <span className="ml-1 text-red-600">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
-                  }}
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
-                  className={`${inputClass} pr-12 ${errors.password ? "border-red-500 focus:border-red-500 focus:ring-red-100" : ""}`}
-                  aria-invalid={Boolean(errors.password)}
-                  aria-describedby={errors.password ? "password-error" : undefined}
-                />
+            <h2 className="text-[23px] font-bold tracking-tight">
+              DriveFlow
+            </h2>
+          </div>
+
+          {/* Branding Content */}
+          <div className="my-10 md:my-0">
+
+            <span className="text-[10px] font-bold tracking-[0.2em] text-blue-400">
+              VEHICLE RENTAL MANAGEMENT
+            </span>
+
+            <h1 className="mt-5 text-[29px] font-bold leading-[1.4] tracking-tight lg:text-[32px]">
+              Manage your fleet.
+              <br />
+              Drive your business
+              <br />
+              forward.
+            </h1>
+
+            <p className="mt-5 max-w-[390px] text-[12px] leading-6 text-slate-300">
+              A smarter way to manage vehicles, bookings, customers and your entire rental operation.
+            </p>
+
+            <div className="mt-7 flex items-center gap-3 text-[11px] text-slate-300">
+              <ShieldCheck
+                size={19}
+                className="shrink-0 text-blue-400"
+              />
+
+              <span>
+                Secure and centralized fleet management
+              </span>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <p className="text-[10px] text-slate-500">
+            © 2026 DriveFlow. All rights reserved.
+          </p>
+        </section>
+
+        {/* RIGHT LOGIN PANEL */}
+        <section className="flex items-center justify-center bg-white px-7 py-10 sm:px-12 lg:px-16">
+
+          <div className="w-full max-w-[390px]">
+
+            {/* Login Heading */}
+            <div className="mb-8">
+
+              <span className="text-[10px] font-bold tracking-[0.2em] text-blue-600">
+                WELCOME BACK
+              </span>
+
+              <h2 className="mt-3 text-[23px] font-bold tracking-tight text-[#17243b]">
+                Sign in to your account
+              </h2>
+
+              <p className="mt-2 text-[12px] leading-6 text-slate-500">
+                Enter your credentials to access DriveFlow.
+              </p>
+            </div>
+
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              className="space-y-6"
+            >
+
+              {/* EMAIL FIELD */}
+              <div>
+<label
+htmlFor="email"
+style={labelStyle}
+>
+Email Address
+<span className="ml-1 text-red-500"></span>
+</label>
+
+<input
+id="email"
+name="email"
+type="email"
+value={email}
+onChange={(e) => {
+setEmail(e.target.value);
+setErrors((prev) => ({
+...prev,
+email: "",
+general: "",
+}));
+}}
+placeholder="name@company.com"
+autoComplete="username"
+style={inputStyle}
+aria-invalid={Boolean(errors.email)}
+onFocus={(e) => {
+e.currentTarget.style.borderColor = "#2563eb";
+}}
+onBlur={(e) => {
+e.currentTarget.style.borderColor =
+errors.email ? "#ef4444" : "#dbe2ea";
+}}
+/>
+
+{errors.email && (
+<p className="mt-2 text-[11px] text-red-600">
+{errors.email}
+</p>
+)}
+</div>
+
+{/* PASSWORD FIELD */}
+<div>
+<label
+htmlFor="password"
+style={labelStyle}
+>
+Password
+<span className="ml-1 text-red-500"></span>
+</label>
+
+<div className="relative">
+<input
+id="password"
+name="password"
+type={showPassword ? "text" : "password"}
+value={password}
+onChange={(e) => {
+setPassword(e.target.value);
+setErrors((prev) => ({
+...prev,
+password: "",
+general: "",
+}));
+}}
+placeholder="Enter your password"
+autoComplete="current-password"
+style={{
+...inputStyle,
+paddingRight: "46px",
+}}
+aria-invalid={Boolean(errors.password)}
+onFocus={(e) => {
+e.currentTarget.style.borderColor = "#2563eb";
+}}
+onBlur={(e) => {
+e.currentTarget.style.borderColor =
+errors.password ? "#ef4444" : "#dbe2ea";
+}}
+/>
+
+<button
+type="button"
+onClick={() => setShowPassword((prev) => !prev)}
+aria-label={showPassword ? "Hide password" : "Show password"}
+className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+>
+{showPassword ? (
+<EyeOff size={18} />
+) : (
+<Eye size={18} />
+)}
+</button>
+</div>
+
+{errors.password && (
+<p className="mt-2 text-[11px] text-red-600">
+{errors.password}
+</p>
+)}
+</div>
+
+{/* REMEMBER ME AND FORGOT PASSWORD */}
+              <div className="flex items-center justify-between gap-3">
+
+                <label className="flex cursor-pointer items-center gap-2 text-[11px] text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 accent-blue-600"
+                  />
+
+                  Remember me
+                </label>
+
                 <button
                   type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                  onClick={() =>
+                    setErrors((prev) => ({
+                      ...prev,
+                      general: "Forgot password will be available later.",
+                    }))
+                  }
+                  className="text-[11px] font-semibold text-blue-600 transition hover:text-blue-800"
                 >
-                  {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                  Forgot password?
                 </button>
               </div>
-              {errors.password && (
-                <p id="password-error" className="mt-1.5 text-xs text-red-600">
-                  {errors.password}
+
+              {/* ERROR MESSAGE */}
+              {errors.general && (
+                <p
+                  role="alert"
+                  className="rounded-lg border border-red-100 bg-red-50 px-3 py-2.5 text-[11px] text-red-600"
+                >
+                  {errors.general}
                 </p>
               )}
-            </div>
 
-            {/* Options */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-              <label className="flex cursor-pointer items-center gap-2 text-[13px] text-slate-600">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 accent-blue-600"
-                />
-                <span>Remember me</span>
-              </label>
-
+              {/* SIGN IN BUTTON */}
               <button
-                type="button"
-                onClick={() => alert("Forgot password screen coming soon")}
-                className="text-[13px] font-semibold text-blue-600 transition hover:text-blue-800"
+                type="submit"
+                disabled={loading}
+                className="flex h-12 w-full items-center justify-center rounded-lg bg-blue-600 text-[13px] font-semibold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Forgot password?
+                {loading ? "Signing In..." : "Sign In"}
               </button>
+
+            </form>
+
+            {/* SECURITY FOOTER */}
+            <div className="mt-8 flex items-center justify-center gap-2 border-t border-slate-100 pt-6 text-center text-[10px] text-slate-400">
+              <ShieldCheck size={15} className="shrink-0" />
+
+              <span>
+                Your account is protected with secure authentication.
+              </span>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex h-12 w-full items-center justify-center rounded-lg bg-blue-700 px-4 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? "Signing In..." : "Sign In"}
-            </button>
-          </form>
-
-          <div className="mt-8 flex items-center justify-center gap-2 text-center text-xs text-slate-400">
-            <ShieldCheck size={17} className="shrink-0" />
-            <span>Your account is protected with secure authentication.</span>
           </div>
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </main>
   );
 }
 

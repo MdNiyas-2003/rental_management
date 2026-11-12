@@ -6,8 +6,8 @@ import Vehicles from "./pages/Vehicles";
 import Customers from "./pages/Customers";
 import Staff from "./pages/Staff";
 import Bookings from "./pages/Bookings";
-import Invoices from "./pages/Invoices";
 import Maintenance from "./pages/Maintenance";
+import VehiclePickupReturn from "./pages/VehiclePickupReturn";
 
 function App() {
     return (
@@ -19,7 +19,10 @@ function App() {
                 <Route path="/customers" element={<Customers />} />
                 <Route path="/staff" element={<Staff />} />
                 <Route path="/bookings" element={<Bookings />} />
-                <Route path="/invoices" element={<Invoices/>}/>
+                <Route
+    path="/vehicle-pickup-return"
+    element={<VehiclePickupReturn />}
+/>
                 <Route path="/maintenance" element={<Maintenance/>}/>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />

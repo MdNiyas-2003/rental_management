@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { ClipboardCheck } from "lucide-react";
 import {
     LayoutDashboard,
     CarFront,
@@ -19,7 +20,11 @@ const menuItems = [
     { label: "Customers", path: "/customers", icon: Users },
     { label: "Staff", path: "/staff", icon: UserCog },
     { label: "Bookings", path: "/bookings", icon: CalendarDays },
-    { label: "Invoices", path: "/invoices", icon: Receipt },
+    {
+        label: "Vehicle Pickup & Return",
+        path: "/vehicle-pickup-return",
+        icon: ClipboardCheck,
+    },
     { label: "Maintenance", path: "/maintenance", icon: Wrench },
 ];
 

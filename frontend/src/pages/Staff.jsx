@@ -4,6 +4,11 @@ import {
     Trash2,
     Plus,
     Users,
+    UserCheck,
+    UserX,
+    Search,
+    X,
+    AlertTriangle,
 } from "lucide-react";
 
 import AdminLayout from "../layouts/AdminLayout";
@@ -17,16 +22,21 @@ function Staff() {
         filteredStaff,
         search,
         setSearch,
-        roleFilter,
-        setRoleFilter,
         statusFilter,
         setStatusFilter,
         activeCount,
         inactiveCount,
+        loading,
+        saving,
+        deleting,
+        error,
+        notification,
+        dismissNotification,
         isModalOpen,
         editingStaff,
         viewStaff,
         setViewStaff,
+        deleteStaff,
         form,
         openAddModal,
         openEditModal,
@@ -34,48 +44,60 @@ function Staff() {
         handleChange,
         handleSubmit,
         handleDelete,
+        confirmDelete,
+        cancelDelete,
     } = useStaff();
-
-    const inputClass =
-        "w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
 
     const columns = [
         {
             key: "name",
             label: "Employee",
-            render: (value, employee) => (
+            render: (value, item) => (
                 <div>
-                    <p className="font-semibold text-gray-800">{value}</p>
-                    <p className="text-xs text-gray-500">
-                        {employee.employeeId}
+                    <p className="text-xs font-semibold text-slate-700">
+                        {value}
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-slate-400">
+                        {item.email}
                     </p>
                 </div>
             ),
         },
         {
+            key: "employeeId",
+            label: "Employee ID",
+            render: (value) => (
+                <span className="text-xs text-slate-600">
+                    {value || "—"}
+                </span>
+            ),
+        },
+        {
+            key: "designation",
+            label: "Designation",
+            render: (value) => (
+                <span className="text-xs text-slate-600">
+                    {value || "—"}
+                </span>
+            ),
+        },
+        {
             key: "phone",
             label: "Phone",
-        },
-        {
-            key: "email",
-            label: "Email",
-        },
-        {
-            key: "role",
-            label: "Role",
-        },
-        {
-            key: "department",
-            label: "Department",
+            render: (value) => (
+                <span className="text-xs text-slate-600">
+                    {value || "—"}
+                </span>
+            ),
         },
         {
             key: "status",
             label: "Status",
             render: (value) => (
                 <span
-                    className={`rounded - full px-3 py-1 text-xs font-semibold ${value === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-600"
+                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${value === "Active"
+                            ? "bg-green-50 text-green-700"
+                            : "bg-slate-100 text-slate-600"
                         }`}
                 >
                     {value}
@@ -85,302 +107,476 @@ function Staff() {
         {
             key: "id",
             label: "Actions",
-            render: (_, employee) => (
-                <div className="flex items-center gap-2">
+            render: (_, item) => (
+                <div className="flex items-center gap-1.5">
                     <button
-                        onClick={() => setViewStaff(employee)}
-                        className="rounded-lg p-2 text-blue-600 hover:bg-blue-50"
+                        type="button"
                         title="View"
+                        onClick={() => setViewStaff(item)}
+                        className="flex h-[26px] w-[26px] items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-blue-50 hover:text-blue-600"
                     >
-                        <Eye size={17} />
+                        <Eye size={14} />
                     </button>
 
                     <button
-                        onClick={() => openEditModal(employee)}
-                        className="rounded-lg p-2 text-amber-600 hover:bg-amber-50"
+                        type="button"
                         title="Edit"
+                        onClick={() => openEditModal(item)}
+                        className="flex h-[26px] w-[26px] items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-blue-50 hover:text-blue-600"
                     >
-                        <Pencil size={17} />
+                        <Pencil size={14} />
                     </button>
 
                     <button
-                        onClick={() => handleDelete(employee.id)}
-                        className="rounded-lg p-2 text-red-600 hover:bg-red-50"
+                        type="button"
                         title="Delete"
+                        onClick={() => handleDelete(item)}
+                        className="flex h-[26px] w-[26px] items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-red-50 hover:text-red-600"
                     >
-                        <Trash2 size={17} />
+                        <Trash2 size={14} />
                     </button>
                 </div>
             ),
         },
     ];
 
+    const summaryCards = [
+        {
+            title: "Total Staff",
+            value: staff.length,
+            icon: Users,
+            style: "bg-blue-50 text-blue-600",
+        },
+        {
+            title: "Active Staff",
+            value: activeCount,
+            icon: UserCheck,
+            style: "bg-green-50 text-green-600",
+        },
+        {
+            title: "Inactive Staff",
+            value: inactiveCount,
+            icon: UserX,
+            style: "bg-slate-100 text-slate-600",
+        },
+    ];
+
+    const inputClass =
+        "min-h-[36px] w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
+
+    const labelClass = "text-[11px] font-semibold text-slate-600";
+
     return (
         <AdminLayout>
-            <div className="space-y-6">
+            <div className="mx-auto flex min-h-[calc(100dvh-135px)] w-full max-w-[1600px] flex-col gap-2">
 
-                {/* Header */}
-                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                {/* Notification */}
+                {notification && (
+                    <div
+                        className={`fixed right-5 top-20 z-[100] flex w-[340px] max-w-[calc(100vw-32px)] items-center gap-3 rounded-lg border p-3 shadow-lg${notification.type === "error"
+                                ? "border-red-200 bg-red-50"
+                                : "border-green-200 bg-green-50"
+                            }`} > <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${notification.type === "error" ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"}`}
+                            >
+                            {notification.type === "error" ? (
+                                <AlertTriangle size={17} />
+                            ) : (
+                                <UserCheck size={17} />
+                            )}
+                        </div>
+
+                        <p
+                            className={`flex-1 text-xs font-medium${notification.type === "error"
+                                    ? "text-red-700"
+                                    : "text-green-700"
+                                }`}
+                        >
+                            {notification.message}
+                        </p>
+
+                        <button
+                            type="button"
+                            onClick={dismissNotification}
+                            className="text-slate-400 hover:text-slate-700"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+                )}
+
+                {/* Page Heading */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-800">
-                            Staff Management
+                        <h1 className="text-xl font-bold text-[#17243b]">
+                            Staff
                         </h1>
-                        <p className="mt-1 text-sm text-gray-500">
-                            Manage employees, roles and staff information.
+                        <p className="mt-0.5 text-xs text-slate-500">
+                            Manage your staff members and login accounts.
                         </p>
                     </div>
 
                     <button
+                        type="button"
                         onClick={openAddModal}
-                        className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                        className="flex items-center justify-center gap-1.5 rounded-lg bg-[#3158c9] px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-800"
                     >
-                        <Plus size={18} />
+                        <Plus size={15} />
                         Add Staff
                     </button>
                 </div>
 
                 {/* Summary Cards */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <div className="rounded-xl border border-gray-200 bg-white p-5">
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm text-gray-500">Total Staff</p>
-                            <Users size={22} className="text-blue-600" />
-                        </div>
-                        <h2 className="mt-3 text-2xl font-bold text-gray-800">
-                            {staff.length}
-                        </h2>
-                    </div>
+                <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
+                    {summaryCards.map((item) => {
+                        const Icon = item.icon;
 
-                    <div className="rounded-xl border border-gray-200 bg-white p-5">
-                        <p className="text-sm text-gray-500">Active Staff</p>
-                        <h2 className="mt-3 text-2xl font-bold text-green-600">
-                            {activeCount}
-                        </h2>
-                    </div>
+                        return (
+                            <div
+                                key={item.title}
+                                className="flex min-h-[60px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2"
+                            >
+                                <div
+                                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${item.style}`}
+                                >
+                                    <Icon size={16} />
+                                </div>
 
-                    <div className="rounded-xl border border-gray-200 bg-white p-5">
-                        <p className="text-sm text-gray-500">Inactive Staff</p>
-                        <h2 className="mt-3 text-2xl font-bold text-gray-600">
-                            {inactiveCount}
-                        </h2>
-                    </div>
+                                <span className="min-w-0 text-[11px] font-medium text-slate-500">
+                                    {item.title}
+                                </span>
+
+                                <strong className="ml-auto text-lg font-bold leading-none text-[#17243b] tabular-nums">
+                                    {item.value}
+                                </strong>
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {/* Staff Table */}
-                <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
-                    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <h2 className="font-semibold text-gray-800">
-                            Staff List
-                        </h2>
+                <section className="flex flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
 
-                        <div className="flex flex-col gap-3 sm:flex-row">
+                    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2">
+                        <div>
+                            <h2 className="text-sm font-semibold text-[#17243b]">
+                                All Staff
+                            </h2>
+                            <p className="mt-0.5 text-[10px] text-slate-400">
+                                View and manage your employees.
+                            </p>
+                        </div>
+
+                        <span className="rounded-md bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-600">
+                            {filteredStaff.length} Staff
+                        </span>
+                    </div>
+
+                    {/* Search and Filters */}
+                    <div className="flex flex-col gap-2 px-4 pb-2 sm:flex-row">
+                        <div className="flex min-h-[34px] flex-1 items-center gap-2 rounded-lg border border-slate-200 px-2.5 text-slate-400 focus-within:border-blue-500">
+                            <Search size={15} />
+
                             <input
                                 type="text"
+                                placeholder="Search staff, employee ID, phone or email..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search staff..."
-                                className={`${inputClass} sm:w-64`
-                                }
-                            />
-
-                            <select
-                                value={roleFilter}
-                                onChange={(e) => setRoleFilter(e.target.value)}
-                                className={inputClass}
-                            >
-                                <option value="All">All Roles</option>
-                                <option value="Manager">Manager</option>
-                                <option value="Rental Executive">Rental Executive</option>
-                                <option value="Vehicle Inspector">Vehicle Inspector</option>
-                                <option value="Accountant">Accountant</option>
-                            </select>
-
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className={inputClass}
-                            >
-                                <option value="All">All Status</option>
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-                            </select>
-                        </div >
-                    </div >
-
-                    <DataTable
-                        columns={columns}
-                        data={filteredStaff}
-                        pageSize={5}
-                        emptyMessage="No staff members found."
-                    />
-                </div >
-            </div >
-
-            {/* Add / Edit Staff Modal */}
-            < Modal
-                isOpen={isModalOpen}
-                onClose={closeModal}
-                title={editingStaff ? "Edit Staff" : "Add Staff"}
-            >
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Employee Name
-                        </label>
-                        <input
-                            name="name"
-                            value={form.name}
-                            onChange={handleChange}
-                            required
-                            className={inputClass}
-                            placeholder="Enter employee name"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">
-                                Employee ID
-                            </label>
-                            <input
-                                name="employeeId"
-                                value={form.employeeId}
-                                onChange={handleChange}
-                                required
-                                className={inputClass}
-                                placeholder="EMP-1006"
+                                className="w-full bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400"
                             />
                         </div>
 
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">
-                                Phone Number
-                            </label>
-                            <input
-                                name="phone"
-                                value={form.phone}
-                                onChange={handleChange}
-                                required
-                                className={inputClass}
-                                placeholder="Enter phone number"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Email
-                        </label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={form.email}
-                            onChange={handleChange}
-                            required
-                            className={inputClass}
-                            placeholder="Enter email"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">
-                                Role
-                            </label>
-                            <select
-                                name="role"
-                                value={form.role}
-                                onChange={handleChange}
-                                className={inputClass}
-                            >
-                                <option value="Manager">Manager</option>
-                                <option value="Rental Executive">Rental Executive</option>
-                                <option value="Vehicle Inspector">Vehicle Inspector</option>
-                                <option value="Accountant">Accountant</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">
-                                Department
-                            </label>
-                            <select
-                                name="department"
-                                value={form.department}
-                                onChange={handleChange}
-                                className={inputClass}
-                            >
-                                <option value="Operations">Operations</option>
-                                <option value="Bookings">Bookings</option>
-                                <option value="Finance">Finance</option>
-                                <option value="Administration">Administration</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Status
-                        </label>
                         <select
-                            name="status"
-                            value={form.status}
-                            onChange={handleChange}
-                            className={inputClass}
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="min-h-[34px] rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] text-slate-600 outline-none focus:border-blue-500"
                         >
+                            <option value="All">All Status</option>
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>
                         </select>
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-3">
+                    {/* Loading / Error / Table */}
+                    {loading ? (
+                        <div className="animate-pulse space-y-3 px-4 py-3">
+                            {Array.from({ length: 5 }).map((_, index) => (
+                                <div
+                                    key={index}
+                                    className="grid grid-cols-5 gap-4"
+                                >
+                                    {Array.from({ length: 5 }).map((__, i) => (
+                                        <div
+                                            key={i}
+                                            className="h-9 rounded-md bg-slate-100"
+                                        />
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    ) : error && staff.length === 0 ? (
+                        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-10">
+                            <p className="text-xs text-red-500">{error}</p>
+
+                            <button
+                                type="button"
+                                onClick={fetchStaff}
+                                className="rounded-md bg-blue-600 px-3 py-2 text-xs font-medium text-white"
+                            >
+                                Retry
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex-1">
+                            <DataTable
+                                columns={columns}
+                                data={filteredStaff}
+                                pageSize={5}
+                                compact
+                                emptyMessage="No staff found"
+                            />
+                        </div>
+                    )}
+                </section>
+            </div>
+
+            {/* Add / Edit Staff Modal */}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={closeModal}
+                title={editingStaff ? "Edit Staff" : "Add New Staff"}
+                size="large"
+            >
+                <form onSubmit={handleSubmit}>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+                        <div className="flex flex-col gap-1.5">
+                            <label className={labelClass}>
+                                Employee Name *
+                            </label>
+                            <input
+                                className={inputClass}
+                                name="name"
+                                value={form.name}
+                                onChange={handleChange}
+                                placeholder="Enter employee name"
+                                required
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                            <label className={labelClass}>
+                                Employee ID *
+                            </label>
+                            <input
+                                className={inputClass}
+                                name="employeeId"
+                                value={form.employeeId}
+                                onChange={handleChange}
+                                placeholder="Enter employee ID"
+                                required
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                            <label className={labelClass}>
+                                Email ID *
+                            </label>
+                            <input
+                                className={inputClass}
+                                name="email"
+                                type="email"
+                                value={form.email}
+                                onChange={handleChange}
+                                placeholder="Enter email ID"
+                                required
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                            <label className={labelClass}>
+                                {editingStaff
+                                    ? "New Password (Optional)"
+                                    : "Initial Password *"}
+                            </label>
+                            <input
+                                className={inputClass}
+                                name="password"
+                                type="password"
+                                value={form.password}
+                                onChange={handleChange}
+                                placeholder={
+                                    editingStaff
+                                        ? "Leave blank to keep current password"
+                                        : "Minimum 8 characters"
+                                }
+                                minLength={8}
+                                required={!editingStaff}
+                                autoComplete="new-password"
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                            <label className={labelClass}>
+                                Phone Number
+                            </label>
+                            <input
+                                className={inputClass}
+                                name="phone"
+                                value={form.phone || ""}
+                                onChange={handleChange}
+                                placeholder="Enter phone number"
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                            <label className={labelClass}>
+                                Designation *
+                            </label>
+                            <input
+                                className={inputClass}
+                                name="designation"
+                                value={form.designation}
+                                onChange={handleChange}
+                                placeholder="Enter designation"
+                                required
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5 sm:col-span-2">
+                            <label className={labelClass}>Status</label>
+                            <select
+                                name="status"
+                                value={form.status || "Active"}
+                                onChange={handleChange}
+                                className={inputClass}
+                            >
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <p className="mt-3 text-xs text-red-500">
+                            {error}
+                        </p>
+                    )}
+
+                    <div className="mt-4 flex flex-wrap justify-end gap-2">
                         <button
                             type="button"
                             onClick={closeModal}
-                            className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            disabled={saving}
+                            className="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"
                         >
                             Cancel
                         </button>
 
                         <button
                             type="submit"
-                            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                            disabled={saving}
+                            className="flex items-center gap-2 rounded-lg bg-[#3158c9] px-4 py-2 text-xs font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            {editingStaff ? "Update Staff" : "Save Staff"}
+                            {saving
+                                ? "Saving..."
+                                : editingStaff
+                                    ? "Update Staff"
+                                    : "Save Staff"}
                         </button>
                     </div>
                 </form>
-            </Modal >
+            </Modal>
 
             {/* View Staff Modal */}
-            < Modal
+            <Modal
                 isOpen={Boolean(viewStaff)}
-                onClose={() => setViewStaff(null)
-                }
+                onClose={() => setViewStaff(null)}
                 title="Staff Details"
             >
                 {viewStaff && (
-                    <div className="space-y-3 text-sm">
-                        <p><strong>Name:</strong> {viewStaff.name}</p>
-                        <p><strong>Employee ID:</strong> {viewStaff.employeeId}</p>
-                        <p><strong>Phone:</strong> {viewStaff.phone}</p>
-                        <p><strong>Email:</strong> {viewStaff.email}</p>
-                        <p><strong>Role:</strong> {viewStaff.role}</p>
-                        <p><strong>Department:</strong> {viewStaff.department}</p>
-                        <p><strong>Status:</strong> {viewStaff.status}</p>
+                    <div>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {[
+                                ["Employee Name", viewStaff.name],
+                                ["Employee ID", viewStaff.employeeId],
+                                ["Email ID", viewStaff.email],
+                                ["Phone Number", viewStaff.phone],
+                                ["Designation", viewStaff.designation],
+                                ["Status", viewStaff.status],
+                            ].map(([label, value]) => (
+                                <div
+                                    key={label}
+                                    className="flex flex-col gap-1"
+                                >
+                                    <span className="text-[11px] text-slate-400">
+                                        {label}
+                                    </span>
+                                    <strong className="text-sm text-slate-700">
+                                        {value || "—"}
+                                    </strong>
+                                </div>
+                            ))}
+                        </div>
 
-                        <div className="flex justify-end pt-3">
+                        <div className="mt-5 flex justify-end">
                             <button
+                                type="button"
                                 onClick={() => setViewStaff(null)}
-                                className="rounded-lg bg-gray-800 px-4 py-2 text-white hover:bg-gray-900"
+                                className="rounded-lg bg-slate-100 px-4 py-2 text-xs text-slate-600 hover:bg-slate-200"
                             >
                                 Close
                             </button>
                         </div>
                     </div>
                 )}
-            </Modal >
-        </AdminLayout >
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={Boolean(deleteStaff)}
+                onClose={cancelDelete}
+                title="Delete Staff"
+            >
+                {deleteStaff && (
+                    <div>
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600">
+                                <AlertTriangle size={20} />
+                            </div>
+
+                            <div>
+                                <p className="text-sm font-semibold text-slate-800">
+                                    Are you sure you want to delete this staff member?
+                                </p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                    {deleteStaff.name} will be permanently removed.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-5 flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={cancelDelete}
+                                disabled={deleting}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={confirmDelete}
+                                disabled={deleting}
+                                className="rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                            >
+                                {deleting ? "Deleting..." : "Yes, Delete"}
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+        </AdminLayout>
     );
 }
 

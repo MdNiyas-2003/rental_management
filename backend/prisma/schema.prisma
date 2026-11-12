@@ -1,8 +1,213 @@
-generator client{
-    provider ="prisma-client"
-    output ="../src/generated/prisma"
+generator client {
+  provider = "prisma-client-js"
 }
 
-datasource db{
-    provider ="postgresql"
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  CUSTOMER
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(CUSTOMER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staff    Staff?
+  customer Customer?
+}
+
+model Staff {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  employeeId  String   @unique
+  designation String
+  phone       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Customer {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  phone         String?
+  licenseNumber String?  @unique
+  address       String?
+  city          String?
+  state         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bookings Booking[]
+}
+
+model Vehicle {
+  id        String   @id @default(uuid())
+  name      String
+  number    String   @unique
+  category  String
+  fuel      String
+  seats     Int
+  price     Decimal  @db.Decimal(10, 2)
+  status    String   @default("Available")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  maintenanceRecords Maintenance[]
+  bookings           Booking[]
+
+  @@index([category])
+  @@index([status])
+}
+
+model Maintenance {
+  id              String    @id @default(uuid())
+  maintenanceId   String    @unique
+  vehicleId       String
+  serviceType     String
+  serviceDate     DateTime
+  nextServiceDate DateTime?
+  odometer        Int
+  serviceProvider String
+  cost            Decimal   @db.Decimal(10, 2)
+  status          String    @default("Scheduled")
+  description     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+
+  @@index([vehicleId])
+  @@index([serviceDate])
+  @@index([status])
+}
+
+model Booking {
+  id        String @id @default(uuid())
+  bookingId String @unique
+
+  customerId String
+  vehicleId  String
+
+  pickupDate DateTime
+  returnDate DateTime
+
+  pickupLocation  String?
+  dropoffLocation String?
+
+  totalDays     Int
+  dailyRate     Decimal @db.Decimal(10, 2)
+  totalAmount   Decimal @db.Decimal(10, 2)
+  advanceAmount Decimal @default(0) @db.Decimal(10, 2)
+
+  status        String  @default("Pending")
+  bookingSource String  @default("ADMIN")
+  createdBy     String?
+  notes         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  vehicle  Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+
+  rental Rental?
+
+  @@index([customerId])
+  @@index([vehicleId])
+  @@index([pickupDate, returnDate])
+  @@index([status])
+}
+
+model Rental {
+  id        String @id @default(uuid())
+  rentalId  String @unique
+  bookingId String @unique
+
+  // Vehicle pickup details
+  actualPickupDate DateTime @default(now())
+  pickupOdometer   Int
+  pickupFuelLevel  String?
+  pickupCondition  String?
+  pickupNotes      String?
+
+  // Vehicle return details
+  actualReturnDate DateTime?
+  returnOdometer   Int?
+  returnFuelLevel  String?
+  returnCondition  String?
+  returnNotes      String?
+
+  // Return calculations and charges
+  totalDistance Int?
+  extraKm       Int     @default(0)
+  extraKmCharge Decimal @default(0) @db.Decimal(10, 2)
+  lateCharges   Decimal @default(0) @db.Decimal(10, 2)
+  damageCharges Decimal @default(0) @db.Decimal(10, 2)
+  fuelCharges   Decimal @default(0) @db.Decimal(10, 2)
+  discount      Decimal @default(0) @db.Decimal(10, 2)
+  tax           Decimal @default(0) @db.Decimal(10, 2)
+
+  finalAmount Decimal? @db.Decimal(10, 2)
+
+  status    String   @default("Active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking Booking  @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  invoice Invoice?
+
+  @@index([status])
+  @@index([actualPickupDate])
+}
+
+model Invoice {
+  id            String @id @default(uuid())
+  invoiceNumber String @unique
+  rentalId      String @unique
+
+  invoiceDate   DateTime @default(now())
+  subtotal      Decimal  @db.Decimal(10, 2)
+  totalAmount   Decimal  @db.Decimal(10, 2)
+  paidAmount    Decimal  @default(0) @db.Decimal(10, 2)
+  balanceAmount Decimal  @db.Decimal(10, 2)
+  status        String   @default("Unpaid")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rental   Rental    @relation(fields: [rentalId], references: [id], onDelete: Restrict)
+  payments Payment[]
+
+  @@index([invoiceDate])
+  @@index([status])
+}
+
+model Payment {
+  id        String @id @default(uuid())
+  invoiceId String
+
+  amount    Decimal  @db.Decimal(10, 2)
+  method    String
+  reference String?
+  notes     String?
+  paidAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+
+  @@index([invoiceId])
+  @@index([paidAt])
 }

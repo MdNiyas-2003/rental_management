@@ -1,10 +1,19 @@
 import {
-    Eye,
-    Pencil,
-    Trash2,
-    Plus,
-    CheckCircle,
     CalendarDays,
+    CarFront,
+    CheckCircle2,
+    Clock3,
+    Eye,
+    FileText,
+    Plus,
+    Search,
+    Trash2,
+    Pencil,
+    XCircle,
+    Users,
+    RefreshCw,
+    AlertTriangle,
+    X,
 } from "lucide-react";
 
 import AdminLayout from "../layouts/AdminLayout";
@@ -12,147 +21,251 @@ import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import useBookings from "../hooks/useBookings";
 
-function Bookings() {
+const money = (value) =>
+    new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+    }).format(Number(value || 0));
+
+const dateFormat = (value) => {
+    if (!value) return "-";
+
+    return new Date(value).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    });
+};
+
+const statusStyle = {
+    Pending: "bg-amber-50 text-amber-700",
+    Confirmed: "bg-blue-50 text-blue-700",
+    Active: "bg-emerald-50 text-emerald-700",
+    Completed: "bg-slate-100 text-slate-600",
+    Cancelled: "bg-red-50 text-red-600",
+};
+
+const inputClass =
+    "min-h-[36px] w-full min-w-0 rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
+
+const labelClass = "text-[11px] font-semibold text-slate-600";
+
+function StatusBadge({ status }) {
+    return (
+        <span
+            className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${statusStyle[status] || "bg-slate-100 text-slate-600"
+                }`}
+        >
+            {status}
+        </span>
+    );
+}
+
+function SummaryCard({ icon: Icon, label, value, color }) {
+    return (
+        <div className="flex min-h-[60px] min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
+            <div
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md${color}`}
+            >
+                <Icon size={16} />
+            </div>
+
+            <span className="min-w-0 text-[11px] font-medium text-slate-500">
+                {label}
+            </span>
+
+            <strong className="ml-auto text-lg font-bold leading-none text-[#17243b] tabular-nums">
+                {value}
+            </strong>
+        </div>
+    );
+}
+
+export default function Bookings() {
     const {
         bookings,
         filteredBookings,
+        customers,
+        availableVehicles,
+        selectedVehicle,
+
+        loading,
+        saving,
+        deleting,
+        error,
+        notification,
+
         search,
         setSearch,
         statusFilter,
         setStatusFilter,
-        paymentFilter,
-        setPaymentFilter,
-        totalCount,
-        pendingCount,
-        confirmedCount,
-        activeCount,
-        cancellationCount,
-        isModalOpen,
-        editingBooking,
-        viewBooking,
-        setViewBooking,
+
+        summary,
         form,
-        openAddModal,
+        setField,
+        totalDays,
+        dailyRate,
+        totalAmount,
+
+        modalOpen,
+        editingBooking,
+        viewingBooking,
+        deleteTarget,
+        setDeleteTarget,
+
+        openCreateModal,
         openEditModal,
+        openViewModal,
         closeModal,
-        handleChange,
-        handleSubmit,
-        handleDelete,
-        approveCancellation,
+        saveBooking,
+        updateStatus,
+        confirmDelete,
+        loadData,
+        dismissNotification,
     } = useBookings();
-
-    const inputClass =
-        "w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
-
-    const statusStyle = {
-        Pending: "bg-amber-100 text-amber-700",
-        Confirmed: "bg-blue-100 text-blue-700",
-        Active: "bg-green-100 text-green-700",
-        Completed: "bg-gray-100 text-gray-700",
-        "Cancellation Requested": "bg-orange-100 text-orange-700",
-        Cancelled: "bg-red-100 text-red-700",
-    };
 
     const columns = [
         {
             key: "bookingId",
-            label: "Booking ID",
+            label: "BOOKING ID",
             render: (value) => (
-                <span className="font-semibold text-blue-600">{value}</span>
+                <span className="font-semibold text-blue-700">
+                    {value}
+                </span>
             ),
         },
         {
-            key: "customer",
-            label: "Customer",
+            key: "customerName",
+            label: "CUSTOMER",
+            render: (_, row) => (
+                <div>
+                    <p className="font-medium text-slate-700">
+                        {row.customerName}
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                        {row.customerPhone || row.customerEmail}
+                    </p>
+                </div>
+            ),
         },
         {
-            key: "vehicle",
-            label: "Vehicle",
-            render: (value, booking) => (
+            key: "vehicleName",
+            label: "VEHICLE",
+            render: (_, row) => (
                 <div>
-                    <p className="font-medium text-gray-800">{value}</p>
-                    <p className="text-xs text-gray-500">
-                        {booking.registrationNumber}
+                    <p className="font-medium text-slate-700">
+                        {row.vehicleName}
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                        {row.vehicleNumber}
                     </p>
                 </div>
             ),
         },
         {
             key: "pickupDate",
-            label: "Rental Period",
-            render: (value, booking) => (
-                <div className="text-xs">
-                    <p>{value}</p>
-                    <p className="text-gray-500">to {booking.returnDate}</p>
-                </div>
-            ),
+            label: "PICKUP",
+            render: (value) => dateFormat(value),
+        },
+        {
+            key: "returnDate",
+            label: "RETURN",
+            render: (value) => dateFormat(value),
         },
         {
             key: "totalAmount",
-            label: "Amount",
+            label: "TOTAL AMOUNT",
             render: (value) => (
-                <span className="font-semibold text-gray-800">
-                    ₹{Number(value).toLocaleString("en-IN")}
+                <span className="font-semibold text-slate-700">
+                    {money(value)}
                 </span>
             ),
         },
         {
             key: "status",
-            label: "Status",
-            render: (value) => (
-                <span
-                    className={`inline - block whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${statusStyle[value] || "bg-gray-100 text-gray-700"
-                        }`} >{value} </span>),
-        }, {
-            key: "paymentStatus",
-            label: "Payment",
-            render: (value) => (<span className={`text- xs font - semibold ${value === "Paid" ? "text-green-600" : "text-red-600"}`}
-            >
-                {value}
-            </span >
-            ),
+            label: "STATUS",
+            render: (value) => <StatusBadge status={value} />,
         },
         {
-            key: "id",
-            label: "Actions",
-            render: (_, booking) => (
+            key: "actions",
+            label: "ACTIONS",
+            render: (_, row) => (
                 <div className="flex items-center gap-1">
                     <button
-                        onClick={() => setViewBooking(booking)}
-                        className="rounded-lg p-2 text-blue-600 hover:bg-blue-50"
-                        title="View"
+                        type="button"
+                        title="View booking"
+                        onClick={() => openViewModal(row)}
+                        className="rounded-md p-1.5 text-slate-500 hover:bg-blue-50 hover:text-blue-600"
                     >
-                        <Eye size={17} />
+                        <Eye size={15} />
                     </button>
 
-                    {booking.status !== "Completed" &&
-                        booking.status !== "Cancelled" && (
-                            <button
-                                onClick={() => openEditModal(booking)}
-                                className="rounded-lg p-2 text-amber-600 hover:bg-amber-50"
-                                title="Edit"
-                            >
-                                <Pencil size={17} />
-                            </button>
-                        )}
-
-                    {booking.status === "Cancellation Requested" && (
+                    {["Pending", "Confirmed"].includes(row.status) && (
                         <button
-                            onClick={() => approveCancellation(booking.id)}
-                            className="rounded-lg p-2 text-green-600 hover:bg-green-50"
-                            title="Approve cancellation"
+                            type="button"
+                            title="Edit booking"
+                            onClick={() => openEditModal(row)}
+                            className="rounded-md p-1.5 text-slate-500 hover:bg-amber-50 hover:text-amber-600"
                         >
-                            <CheckCircle size={17} />
+                            <Pencil size={14} />
                         </button>
                     )}
 
-                    <button
-                        onClick={() => handleDelete(booking.id)}
-                        className="rounded-lg p-2 text-red-600 hover:bg-red-50"
-                        title="Delete"
-                    >
-                        <Trash2 size={17} />
-                    </button>
+                    {row.status === "Pending" && (
+                        <button
+                            type="button"
+                            title="Confirm booking"
+                            onClick={() => updateStatus(row, "Confirmed")}
+                            className="rounded-md p-1.5 text-emerald-600 hover:bg-emerald-50"
+                        >
+                            <CheckCircle2 size={15} />
+                        </button>
+                    )}
+
+                    {row.status === "Confirmed" && (
+                        <button
+                            type="button"
+                            title="Start rental"
+                            onClick={() => updateStatus(row, "Active")}
+                            className="rounded-md p-1.5 text-blue-600 hover:bg-blue-50"
+                        >
+                            <CarFront size={15} />
+                        </button>
+                    )}
+
+                    {row.status === "Active" && (
+                        <button
+                            type="button"
+                            title="Complete booking"
+                            onClick={() => updateStatus(row, "Completed")}
+                            className="rounded-md p-1.5 text-emerald-600 hover:bg-emerald-50"
+                        >
+                            <CheckCircle2 size={15} />
+                        </button>
+                    )}
+
+                    {["Pending", "Confirmed"].includes(row.status) && (
+                        <button
+                            type="button"
+                            title="Cancel booking"
+                            onClick={() => updateStatus(row, "Cancelled")}
+                            className="rounded-md p-1.5 text-red-500 hover:bg-red-50"
+                        >
+                            <XCircle size={15} />
+                        </button>
+                    )}
+
+                    {row.status !== "Active" && (
+                        <button
+                            type="button"
+                            title="Delete booking"
+                            onClick={() => setDeleteTarget(row)}
+                            className="rounded-md p-1.5 text-red-500 hover:bg-red-50"
+                        >
+                            <Trash2 size={15} />
+                        </button>
+                    )}
                 </div>
             ),
         },
@@ -160,308 +273,596 @@ function Bookings() {
 
     return (
         <AdminLayout>
-            <div className="space-y-6">
+            <div className="mx-auto flex min-h-[calc(100dvh-135px)] w-full max-w-[1600px] flex-col gap-2">
 
-                {/* Page Header */}
-                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                {/* Notification */}
+                {notification && (
+                    <div
+                        className={`fixed right-5 top-20 z-[100] flex w-[340px] max-w-[calc(100vw-32px)] items-center gap-3 rounded-lg border p-3 shadow-lg ${notification.type === "error"
+                                ? "border-red-200 bg-red-50"
+                                : "border-green-200 bg-green-50"
+                            }`}> <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${notification.type === "error" ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"}`}
+                            >
+                            {notification.type === "error" ? (
+                                <AlertTriangle size={17} />
+                            ) : (
+                                <CheckCircle2 size={17} />
+                            )}
+                        </div>
+
+                        <p
+                            className={`flex-1 text-xs font-medium ${notification.type === "error"
+                                    ? "text-red-700"
+                                    : "text-green-700"
+                                }`}
+                        >
+                            {notification.message}
+                        </p>
+
+                        <button
+                            type="button"
+                            onClick={dismissNotification}
+                            className="text-slate-400 hover:text-slate-700"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+                )}
+
+                {/* Page Heading */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-800">
+                        <h1 className="text-xl font-bold text-[#17243b]">
                             Bookings
                         </h1>
-                        <p className="mt-1 text-sm text-gray-500">
-                            Manage vehicle reservations and rental operations.
+                        <p className="mt-0.5 text-xs text-slate-500">
+                            Manage vehicle reservations and rental bookings.
                         </p>
                     </div>
 
-                    <button
-                        onClick={openAddModal}
-                        className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-                    >
-                        <Plus size={18} />
-                        Create Booking
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={loadData}
+                            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                        >
+                            <RefreshCw size={14} />
+                            Refresh
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={openCreateModal}
+                            className="flex items-center gap-1.5 rounded-lg bg-[#3158c9] px-3 py-2 text-xs font-semibold text-white hover:bg-blue-800"
+                        >
+                            <Plus size={15} />
+                            New Booking
+                        </button>
+                    </div>
                 </div>
 
                 {/* Summary Cards */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-                    <div className="rounded-xl border border-gray-200 bg-white p-4">
-                        <p className="text-sm text-gray-500">Total Bookings</p>
-                        <h2 className="mt-2 text-2xl font-bold text-gray-800">
-                            {totalCount}
-                        </h2>
-                    </div>
-
-                    <div className="rounded-xl border border-gray-200 bg-white p-4">
-                        <p className="text-sm text-gray-500">Pending</p>
-                        <h2 className="mt-2 text-2xl font-bold text-amber-600">
-                            {pendingCount}
-                        </h2>
-                    </div>
-
-                    <div className="rounded-xl border border-gray-200 bg-white p-4">
-                        <p className="text-sm text-gray-500">Confirmed</p>
-                        <h2 className="mt-2 text-2xl font-bold text-blue-600">
-                            {confirmedCount}
-                        </h2>
-                    </div>
-
-                    <div className="rounded-xl border border-gray-200 bg-white p-4">
-                        <p className="text-sm text-gray-500">Active Rentals</p>
-                        <h2 className="mt-2 text-2xl font-bold text-green-600">
-                            {activeCount}
-                        </h2>
-                    </div>
-
-                    <div className="rounded-xl border border-gray-200 bg-white p-4">
-                        <p className="text-sm text-gray-500">Cancellation Requests</p>
-                        <h2 className="mt-2 text-2xl font-bold text-orange-600">
-                            {cancellationCount}
-                        </h2>
-                    </div>
+                <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
+                    <SummaryCard
+                        icon={CalendarDays}
+                        label="Total Bookings"
+                        value={summary.total}
+                        color="bg-blue-50 text-blue-600"
+                    />
+                    <SummaryCard
+                        icon={Clock3}
+                        label="Pending"
+                        value={summary.pending}
+                        color="bg-amber-50 text-amber-600"
+                    />
+                    <SummaryCard
+                        icon={CheckCircle2}
+                        label="Confirmed"
+                        value={summary.confirmed}
+                        color="bg-sky-50 text-sky-600"
+                    />
+                    <SummaryCard
+                        icon={CarFront}
+                        label="Active Rentals"
+                        value={summary.active}
+                        color="bg-emerald-50 text-emerald-600"
+                    />
+                    <SummaryCard
+                        icon={FileText}
+                        label="Completed"
+                        value={summary.completed}
+                        color="bg-slate-100 text-slate-600"
+                    />
                 </div>
 
-                {/* Booking Table */}
-                <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
-                    <div className="mb-5 space-y-4">
+                {/* Booking Table - Search and Filter are inside this card */}
+                <section className="flex flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
+
+                    {/* Table Header */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2">
                         <div>
-                            <h2 className="font-semibold text-gray-800">
-                                Booking List
+                            <h2 className="text-sm font-semibold text-[#17243b]">
+                                Booking Records
                             </h2>
-                            <p className="mt-1 text-xs text-gray-500">
-                                View and manage all vehicle bookings.
+                            <p className="mt-0.5 text-[10px] text-slate-400">
+                                View and manage vehicle reservations.
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <span className="rounded-md bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-600">
+                            {filteredBookings.length} Bookings
+                        </span>
+                    </div>
+
+                    {/* Search and Filters INSIDE table card */}
+                    <div className="flex flex-col gap-2 px-4 pb-2 sm:flex-row">
+                        <div className="flex min-h-[34px] min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-200 px-2.5 text-slate-400 focus-within:border-blue-500">
+                            <Search size={15} />
+
                             <input
                                 type="text"
+                                placeholder="Search booking, customer or vehicle..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search booking, customer or vehicle..."
-                                className={inputClass}
+                                className="w-full min-w-0 bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400"
                             />
-
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className={inputClass}
-                            >
-                                <option value="All">All Booking Status</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Confirmed">Confirmed</option>
-                                <option value="Active">Active</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Cancellation Requested">
-                                    Cancellation Requested
-                                </option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-
-                            <select
-                                value={paymentFilter}
-                                onChange={(e) => setPaymentFilter(e.target.value)}
-                                className={inputClass}
-                            >
-                                <option value="All">All Payment Status</option>
-                                <option value="Paid">Paid</option>
-                                <option value="Unpaid">Unpaid</option>
-                            </select>
                         </div>
+
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="min-h-[34px] rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] text-slate-600 outline-none focus:border-blue-500 sm:w-40"
+                        >
+                            <option value="All">All Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Confirmed">Confirmed</option>
+                            <option value="Active">Active</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
                     </div>
 
-                    <DataTable
-                        columns={columns}
-                        data={filteredBookings}
-                        pageSize={5}
-                        emptyMessage="No bookings found."
-                    />
-                </div>
+                    {/* Loading */}
+                    {loading ? (
+                        <div className="animate-pulse space-y-3 px-4 py-3">
+                            {Array.from({ length: 5 }).map((_, index) => (
+                                <div
+                                    key={index}
+                                    className="grid grid-cols-5 gap-4"
+                                >
+                                    {Array.from({ length: 5 }).map((__, i) => (
+                                        <div
+                                            key={i}
+                                            className="h-9 rounded-md bg-slate-100"
+                                        />
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    ) : error && bookings.length === 0 ? (
+                        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-10">
+                            <p className="text-xs text-red-500">{error}</p>
+
+                            <button
+                                type="button"
+                                onClick={loadData}
+                                className="rounded-md bg-blue-600 px-3 py-2 text-xs font-medium text-white"
+                            >
+                                Retry
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="min-h-0 flex-1">
+                            <DataTable
+                                columns={columns}
+                                data={filteredBookings}
+                                pageSize={5}
+                                compact
+                                emptyMessage="No bookings found"
+                            />
+                        </div>
+                    )}
+                </section>
             </div>
 
-            {/* Add / Edit Booking Modal */}
+            {/* CREATE / EDIT BOOKING */}
             <Modal
-                isOpen={isModalOpen}
+                isOpen={modalOpen}
                 onClose={closeModal}
-                title={editingBooking ? "Edit Booking" : "Create Booking"}
+                title={editingBooking ? "Edit Booking" : "Create New Booking"}
+                size="large"
             >
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={saveBooking} className="w-full min-w-0">
+                    <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
 
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Customer Name
-                        </label>
-                        <input
-                            name="customer"
-                            value={form.customer}
-                            onChange={handleChange}
-                            required
-                            className={inputClass}
-                            placeholder="Enter customer name"
-                        />
-                    </div>
+                        {/* Customer */}
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                            <label className={labelClass}>Customer *</label>
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">
-                                Vehicle Name
-                            </label>
-                            <input
-                                name="vehicle"
-                                value={form.vehicle}
-                                onChange={handleChange}
+                            <select
+                                value={form.customerId}
+                                onChange={(e) =>
+                                    setField("customerId", e.target.value)
+                                }
                                 required
                                 className={inputClass}
-                                placeholder="Enter vehicle name"
-                            />
+                            >
+                                <option value="">Select Customer</option>
+
+                                {customers.map((customer) => (
+                                    <option
+                                        key={customer.id}
+                                        value={customer.id}
+                                    >
+                                        {customer.name || "Customer"}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">
+                        {/* Vehicle - name only */}
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                            <label className={labelClass}>Vehicle *</label>
+
+                            <select
+                                value={form.vehicleId}
+                                onChange={(e) =>
+                                    setField("vehicleId", e.target.value)
+                                }
+                                required
+                                className={inputClass}
+                            >
+                                <option value="">Select Vehicle</option>
+
+                                {availableVehicles.map((vehicle) => (
+                                    <option
+                                        key={vehicle.id}
+                                        value={vehicle.id}
+                                    >
+                                        {vehicle.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Auto fetched vehicle information */}
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                            <label className={labelClass}>
                                 Registration Number
                             </label>
+
                             <input
-                                name="registrationNumber"
-                                value={form.registrationNumber}
-                                onChange={handleChange}
-                                required
-                                className={inputClass}
-                                placeholder="TN 01 AB 1234"
+                                value={selectedVehicle?.number || ""}
+                                readOnly
+                                placeholder="Auto-filled after vehicle selection"
+                                className={`${inputClass} bg-slate-50 text-slate-600`}
                             />
                         </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">
-                                Pickup Date
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                            <label className={labelClass}>
+                                Amount Per Day (₹)
                             </label>
+
+                            <input
+                                value={
+                                    selectedVehicle
+                                        ? money(selectedVehicle.price)
+                                        : ""
+                                }
+                                readOnly
+                                placeholder="Auto-filled after vehicle selection"
+                                className={`${inputClass} bg-slate-50 font-semibold text-slate-700`}
+                            />
+                        </div>
+
+                        {/* Pickup date */}
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                            <label className={labelClass}>Pickup Date *</label>
+
                             <input
                                 type="date"
-                                name="pickupDate"
                                 value={form.pickupDate}
-                                onChange={handleChange}
+                                onChange={(e) =>
+                                    setField("pickupDate", e.target.value)
+                                }
                                 required
                                 className={inputClass}
                             />
                         </div>
 
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">
-                                Return Date
-                            </label>
+                        {/* Return date */}
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                            <label className={labelClass}>Return Date *</label>
+
                             <input
                                 type="date"
-                                name="returnDate"
-                                value={form.returnDate}
-                                onChange={handleChange}
-                                required
                                 min={form.pickupDate || undefined}
+                                value={form.returnDate}
+                                onChange={(e) =>
+                                    setField("returnDate", e.target.value)
+                                }
+                                required
+                                className={inputClass}
+                            />
+                        </div>
+
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                            <label className={labelClass}>Pickup Location</label>
+
+                            <input
+                                value={form.pickupLocation}
+                                onChange={(e) =>
+                                    setField("pickupLocation", e.target.value)
+                                }
+                                placeholder="Pickup location"
+                                className={inputClass}
+                            />
+                        </div>
+
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                            <label className={labelClass}>Drop-off Location</label>
+
+                            <input
+                                value={form.dropoffLocation}
+                                onChange={(e) =>
+                                    setField("dropoffLocation", e.target.value)
+                                }
+                                placeholder="Drop-off location"
+                                className={inputClass}
+                            />
+                        </div>
+
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                            <label className={labelClass}>
+                                Advance Amount (₹)
+                            </label>
+
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={form.advanceAmount}
+                                onChange={(e) =>
+                                    setField("advanceAmount", e.target.value)
+                                }
+                                className={inputClass}
+                            />
+                        </div>
+
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                            <label className={labelClass}>Notes</label>
+
+                            <input
+                                value={form.notes}
+                                onChange={(e) =>
+                                    setField("notes", e.target.value)
+                                }
+                                placeholder="Optional notes"
                                 className={inputClass}
                             />
                         </div>
                     </div>
 
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Total Amount (₹)
-                        </label>
-                        <input
-                            type="number"
-                            name="totalAmount"
-                            value={form.totalAmount}
-                            onChange={handleChange}
-                            required
-                            min="0"
-                            className={inputClass}
-                            placeholder="Enter total amount"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">
-                                Booking Status
-                            </label>
-                            <select
-                                name="status"
-                                value={form.status}
-                                onChange={handleChange}
-                                className={inputClass}
-                            >
-                                <option value="Pending">Pending</option>
-                                <option value="Confirmed">Confirmed</option>
-                                <option value="Active">Active</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Cancellation Requested">
-                                    Cancellation Requested
-                                </option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
+                    {/* PRICE SUMMARY */}
+                    <div className="mt-3 grid grid-cols-3 gap-2 rounded-lg border border-blue-100 bg-blue-50/70 p-3">
+                        <div className="min-w-0">
+                            <p className="text-[10px] text-slate-500">
+                                Rental Days
+                            </p>
+                            <p className="mt-1 text-sm font-semibold text-slate-800">
+                                {totalDays}
+                            </p>
                         </div>
 
-                        <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">
-                                Payment Status
-                            </label>
-                            <select
-                                name="paymentStatus"
-                                value={form.paymentStatus}
-                                onChange={handleChange}
-                                className={inputClass}
-                            >
-                                <option value="Unpaid">Unpaid</option>
-                                <option value="Paid">Paid</option>
-                            </select>
+                        <div className="min-w-0">
+                            <p className="text-[10px] text-slate-500">
+                                Daily Rate
+                            </p>
+                            <p className="mt-1 truncate text-sm font-semibold text-slate-800">
+                                {money(dailyRate)}
+                            </p>
+                        </div>
+
+                        <div className="min-w-0">
+                            <p className="text-[10px] text-slate-500">
+                                Total Amount
+                            </p>
+                            <p className="mt-1 truncate text-sm font-semibold text-blue-700">
+                                {money(totalAmount)}
+                            </p>
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-3">
+                    <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-3">
                         <button
                             type="button"
                             onClick={closeModal}
-                            className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
                         >
                             Cancel
                         </button>
 
                         <button
                             type="submit"
-                            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                            disabled={saving}
+                            className="rounded-lg bg-[#3158c9] px-4 py-2 text-xs font-semibold text-white hover:bg-blue-800 disabled:opacity-60"
                         >
-                            {editingBooking ? "Update Booking" : "Save Booking"}
+                            {saving
+                                ? "Saving..."
+                                : editingBooking
+                                    ? "Update Booking"
+                                    : "Create Booking"}
                         </button>
                     </div>
                 </form>
             </Modal>
 
-            {/* View Booking Modal */}
+            {/* VIEW BOOKING */}
             <Modal
-                isOpen={Boolean(viewBooking)}
-                onClose={() => setViewBooking(null)}
+                isOpen={Boolean(viewingBooking)}
+                onClose={closeModal}
                 title="Booking Details"
             >
-                {viewBooking && (
-                    <div className="space-y-3 text-sm">
-                        <p><strong>Booking ID:</strong> {viewBooking.bookingId}</p>
-                        <p><strong>Customer:</strong> {viewBooking.customer}</p>
-                        <p><strong>Vehicle:</strong> {viewBooking.vehicle}</p>
-                        <p><strong>Registration:</strong> {viewBooking.registrationNumber}</p>
-                        <p><strong>Pickup:</strong> {viewBooking.pickupDate}</p>
-                        <p><strong>Return:</strong> {viewBooking.returnDate}</p>
-                        <p><strong>Rental Days:</strong> {viewBooking.totalDays}</p>
-                        <p>
-                            <strong>Total Amount:</strong>{" "}
-                            ₹{Number(viewBooking.totalAmount).toLocaleString("en-IN")}
-                        </p>
-                        <p><strong>Booking Status:</strong> {viewBooking.status}</p>
-                        <p><strong>Payment Status:</strong> {viewBooking.paymentStatus}</p>
+                {viewingBooking && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs text-slate-400">
+                                    Booking Reference
+                                </p>
+                                <p className="mt-1 text-sm font-semibold text-blue-700">
+                                    {viewingBooking.bookingId}
+                                </p>
+                            </div>
 
-                        <div className="flex justify-end pt-3">
+                            <StatusBadge status={viewingBooking.status} />
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="rounded-lg bg-slate-50 p-3">
+                                <Users size={16} className="mb-2 text-slate-500" />
+                                <p className="text-[10px] text-slate-400">Customer</p>
+                                <p className="mt-1 text-xs font-semibold text-slate-700">
+                                    {viewingBooking.customerName}
+                                </p>
+                                <p className="mt-1 break-all text-[10px] text-slate-500">
+                                    {viewingBooking.customerEmail}
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg bg-slate-50 p-3">
+                                <CarFront size={16} className="mb-2 text-slate-500" />
+                                <p className="text-[10px] text-slate-400">Vehicle</p>
+                                <p className="mt-1 text-xs font-semibold text-slate-700">
+                                    {viewingBooking.vehicleName}
+                                </p>
+                                <p className="mt-1 text-[10px] text-slate-500">
+                                    {viewingBooking.vehicleNumber}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <p className="text-slate-400">Pickup Date</p>
+                                <p className="mt-1 font-medium text-slate-700">
+                                    {dateFormat(viewingBooking.pickupDate)}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-slate-400">Return Date</p>
+                                <p className="mt-1 font-medium text-slate-700">
+                                    {dateFormat(viewingBooking.returnDate)}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-slate-400">Rental Days</p>
+                                <p className="mt-1 font-medium text-slate-700">
+                                    {viewingBooking.totalDays}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-slate-400">Daily Rate</p>
+                                <p className="mt-1 font-medium text-slate-700">
+                                    {money(viewingBooking.dailyRate)}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-slate-400">Advance Paid</p>
+                                <p className="mt-1 font-medium text-slate-700">
+                                    {money(viewingBooking.advanceAmount)}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-slate-400">Total Amount</p>
+                                <p className="mt-1 font-semibold text-blue-700">
+                                    {money(viewingBooking.totalAmount)}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-slate-400">Pickup Location</p>
+                                <p className="mt-1 font-medium text-slate-700">
+                                    {viewingBooking.pickupLocation || "-"}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-slate-400">Drop-off Location</p>
+                                <p className="mt-1 font-medium text-slate-700">
+                                    {viewingBooking.dropoffLocation || "-"}
+                                </p>
+                            </div>
+                        </div>
+
+                        {viewingBooking.notes && (
+                            <div className="rounded-lg bg-slate-50 p-3">
+                                <p className="text-[10px] text-slate-400">Notes</p>
+                                <p className="mt-1 text-xs text-slate-700">
+                                    {viewingBooking.notes}
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="flex justify-end border-t border-slate-100 pt-3">
                             <button
-                                onClick={() => setViewBooking(null)}
-                                className="rounded-lg bg-gray-800 px-4 py-2 text-white hover:bg-gray-900"
+                                type="button"
+                                onClick={closeModal}
+                                className="rounded-lg bg-slate-800 px-4 py-2 text-xs font-medium text-white"
                             >
                                 Close
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* DELETE CONFIRMATION */}
+            <Modal
+                isOpen={Boolean(deleteTarget)}
+                onClose={() => setDeleteTarget(null)}
+                title="Delete Booking"
+            >
+                {deleteTarget && (
+                    <div>
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600">
+                                <AlertTriangle size={20} />
+                            </div>
+
+                            <div>
+                                <p className="text-sm font-semibold text-slate-800">
+                                    Are you sure you want to delete this booking?
+                                </p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                    {deleteTarget.bookingId} will be permanently removed.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-5 flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setDeleteTarget(null)}
+                                disabled={deleting}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={confirmDelete}
+                                disabled={deleting}
+                                className="rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                            >
+                                {deleting ? "Deleting..." : "Delete"}
                             </button>
                         </div>
                     </div>
@@ -470,5 +871,3 @@ function Bookings() {
         </AdminLayout>
     );
 }
-
-export default Bookings;

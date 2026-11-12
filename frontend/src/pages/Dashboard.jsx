@@ -3,7 +3,14 @@ import {
     TrendingDown,
     Clock,
     Eye,
+    CarFront,
+    Users,
+    CalendarDays,
+    IndianRupee,
+    CheckCircle,
+    Wrench,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import AdminLayout from "../layouts/AdminLayout";
 import DataTable from "../components/DataTable";
@@ -27,8 +34,9 @@ const bookingColumns = [
 
             return (
                 <span
-                    className={`inline - flex rounded-full px-3 py-1.5 text - [10px] font - semibold ${styles[value] || "bg-slate-100 text-slate-600"
-                        } `}
+                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                        styles[value] || "bg-slate-100 text-slate-600"
+                    }`}
                 >
                     {value}
                 </span>
@@ -37,7 +45,22 @@ const bookingColumns = [
     },
 ];
 
+const statIconStyles = {
+    blue: "bg-blue-50 text-blue-600",
+    purple: "bg-purple-50 text-purple-600",
+    green: "bg-green-50 text-green-600",
+    orange: "bg-orange-50 text-orange-600",
+};
+
+const activityStyles = {
+    green: "bg-green-50 text-green-600",
+    blue: "bg-blue-50 text-blue-600",
+    orange: "bg-orange-50 text-orange-600",
+};
+
 function Dashboard() {
+    const navigate = useNavigate();
+
     const {
         statistics,
         revenueData,
@@ -46,291 +69,308 @@ function Dashboard() {
         activities,
         selectedYear,
         handleYearChange,
+        loading,
+        error,
+        refreshDashboard,
     } = useDashboard();
 
-    const total = vehicleAvailability.total;
-
-    const availablePercentage =
-        (vehicleAvailability.available / total) * 100;
-
-    const rentedPercentage =
-        (vehicleAvailability.rented / total) * 100;
-
-    const maintenancePercentage =
-        (vehicleAvailability.maintenance / total) * 100;
+    const total = Math.max(vehicleAvailability.total, 1);
+    const availablePercentage = (vehicleAvailability.available / total) * 100;
+    const rentedPercentage = (vehicleAvailability.rented / total) * 100;
+    const maintenancePercentage = (vehicleAvailability.maintenance / total) * 100;
 
     return (
         <AdminLayout>
-            <div className="flex flex-col gap-6">
-
-                {/* Page Heading */}
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-[#17233d]">
+            <div className="flex h-[calc(100dvh-135px)] min-h-0 flex-col gap-3 overflow-y-auto xl:overflow-hidden">
+                {/* Page heading */}
+                <div className="flex shrink-0 items-center justify-between gap-3">
+                    <div className="min-w-0">
+                        <h1 className="text-lg font-bold leading-tight text-[#17233d]">
                             Dashboard Overview
                         </h1>
-                        <p className="mt-2 text-[13px] text-slate-500">
+                        <p className="mt-1 text-[11px] text-slate-500">
                             Welcome back! Here's what's happening with your business.
                         </p>
                     </div>
 
-                    <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600">
+                    <div className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] text-slate-600">
                         November 09, 2026
                     </div>
                 </div>
 
-                {/* Statistics */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    {statistics.map((item) => {
-                        const Icon = item.icon;
+                {error && (
+                    <div className="flex shrink-0 items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700">
+                        <span>{error}</span>
+                        <button
+                            type="button"
+                            onClick={refreshDashboard}
+                            className="shrink-0 font-semibold underline"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
 
-                        const iconStyles = {
-                            blue: "bg-blue-50 text-blue-600",
-                            purple: "bg-purple-50 text-purple-600",
-                            green: "bg-green-50 text-green-600",
-                            orange: "bg-orange-50 text-orange-600",
-                        };
+                {/* Statistics */}
+                <div className="grid shrink-0 grid-cols-2 gap-3 xl:grid-cols-4">
+                    {loading && statistics.length === 0
+                        ? Array.from({ length: 4 }).map((_, index) => (
+                            <div
+                                key={index}
+                                className="min-h-[82px] animate-pulse rounded-xl border border-slate-200 bg-slate-100"
+                            />
+                        ))
+                        : statistics.map((item) => {
+                        const Icon = item.icon;
 
                         return (
                             <div
                                 key={item.title}
-                                className="rounded-xl border border-slate-200 bg-white p-5"
+                                className="flex min-h-[82px] items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3"
                             >
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-slate-500">
+                                <div className="min-w-0">
+                                    <p className="truncate text-[11px] text-slate-500">
                                         {item.title}
-                                    </span>
-
-                                    <div
-                                        className={`grid h-[42px] w-[42px] place-items-center rounded-xl${iconStyles[item.color]
-                                            }`
-                                        }
-                                    >
-                                        <Icon size={21} />
-                                    </div >
-                                </div >
-
-                                <h2 className="my-5 text-[25px] font-bold text-[#17233d]">
-                                    {item.value}
-                                </h2>
-
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <span
-                                        className={`flex items-center gap-1 text-[11px] font-semibold ${item.positive ? "text-green-600" : "text-red-500"
+                                    </p>
+                                    <h2 className="mt-1 text-xl font-bold leading-tight text-[#17233d]">
+                                        {item.value}
+                                    </h2>
+                                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                                        <span
+                                            className={`flex items-center gap-0.5 text-[10px] font-semibold ${
+                                                item.positive ? "text-green-600" : "text-red-500"
                                             }`}
-                                    >
-                                        {item.positive ? (
-                                            <TrendingUp size={14} />
-                                        ) : (
-                                            <TrendingDown size={14} />
-                                        )}
-                                        {item.change}
-                                    </span>
+                                        >
+                                            {item.positive ? (
+                                                <TrendingUp size={12} />
+                                            ) : (
+                                                <TrendingDown size={12} />
+                                            )}
+                                            {item.change}
+                                        </span>
+                                        <span className="text-[9px] text-slate-400">
+                                            {item.description}
+                                        </span>
+                                    </div>
+                                </div>
 
-                                    <small className="text-[10px] text-slate-400">
-                                        {item.description}
-                                    </small>
-                                </div >
-                            </div >
+                                <div
+                                    className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${
+                                        statIconStyles[item.color] || "bg-slate-50 text-slate-600"
+                                    }`}
+                                >
+                                    <Icon size={18} />
+                                </div>
+                            </div>
                         );
                     })}
-                </div >
+                </div>
 
-                {/* Revenue and Availability */}
-                < div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.7fr_1fr]" >
+                {/* Dashboard content: two compact rows */}
+                <div className="grid min-h-0 flex-1 grid-rows-2 gap-3">
+                    {/* Revenue and vehicle availability */}
+                    <div className="grid min-h-0 grid-cols-1 gap-3 lg:grid-cols-[1.65fr_1fr]">
+                        <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-4">
+                            <div className="mb-2 flex shrink-0 items-center justify-between gap-3">
+                                <div>
+                                    <h3 className="text-[13px] font-semibold text-[#17233d]">
+                                        Revenue Overview
+                                    </h3>
+                                    <p className="mt-0.5 text-[10px] text-slate-400">
+                                        Monthly revenue performance
+                                    </p>
+                                </div>
 
-                    {/* Revenue Chart */}
-                    < section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6" >
-                        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <h3 className="text-[15px] font-semibold text-[#17233d]">
-                                    Revenue Overview
+                                <select
+                                    value={selectedYear}
+                                    onChange={(event) => handleYearChange(event.target.value)}
+                                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] text-slate-600 outline-none focus:border-blue-400"
+                                >
+                                    <option value="2026">2026</option>
+                                    <option value="2025">2025</option>
+                                </select>
+                            </div>
+
+                            <div className="flex min-h-0 flex-1 items-end justify-between gap-2 pt-2">
+                                {revenueData.length > 0 ? revenueData.map((item, index) => (
+                                    <div
+                                        key={item.month}
+                                        className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5"
+                                    >
+                                        <div className="flex min-h-0 w-full flex-1 items-end">
+                                            <div
+                                                title={`${item.month}: ${item.height}%`}
+                                                className={`w-full rounded-t-sm ${
+                                                    index % 2 === 0 ? "bg-blue-600" : "bg-blue-300"
+                                                }`}
+                                                style={{
+                                                    height: `${item.height}%`,
+                                                    minHeight: "5px",
+                                                }}
+                                            />
+                                        </div>
+                                        <span className="text-[9px] text-slate-400">
+                                            {item.month}
+                                        </span>
+                                    </div>
+                                )) : (
+                                    <p className="mb-8 w-full text-center text-[11px] text-slate-400">
+                                        {loading ? "Loading revenue..." : "No payment records for this year"}
+                                    </p>
+                                )}
+                            </div>
+                        </section>
+
+                        <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-4">
+                            <div className="shrink-0">
+                                <h3 className="text-[13px] font-semibold text-[#17233d]">
+                                    Vehicle Availability
                                 </h3>
-                                <p className="mt-1 text-[11px] text-slate-400">
-                                    Monthly revenue performance
+                                <p className="mt-0.5 text-[10px] text-slate-400">
+                                    Current fleet status
                                 </p>
                             </div>
 
-                            <select
-                                value={selectedYear}
-                                onChange={(e) => handleYearChange(e.target.value)}
-                                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs"
-                            >
-                                <option value="2026">2026</option>
-                                <option value="2025">2025</option>
-                            </select>
-                        </div>
+                            <div className="my-2 text-center">
+                                <h2 className="text-2xl font-bold leading-tight text-[#17233d]">
+                                    {vehicleAvailability.total}
+                                </h2>
+                                <span className="text-[10px] text-slate-400">
+                                    Total Vehicles
+                                </span>
+                            </div>
 
-                        <div className="flex h-[220px] items-end justify-between gap-2">
-                            {revenueData.map((item, index) => (
+                            <div className="mb-3 flex h-2 shrink-0 overflow-hidden rounded-full">
                                 <div
-                                    key={item.month}
-                                    className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"
-                                >
-                                    <div className="flex h-[185px] w-full items-end">
-                                        <div
-                                            title={`${item.month}: ${item.height}%`}
-                                            className={`block w-full rounded-t-md ${index%2 ===0 ? "bg-blue-600":"bg-blue-300"}`}
-                                            style={{
-                                                height:`${item.height}%`,
-                                                minHeight:"8px",
-                                            }}
-                                        />
-                                    </div>
-
-                                    <span className="text-[10px] text-slate-400">
-                                        {item.month}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </section >
-
-                    {/* Vehicle Availability */}
-                    < section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6" >
-                        <div className="mb-6">
-                            <h3 className="text-[15px] font-semibold text-[#17233d]">
-                                Vehicle Availability
-                            </h3>
-                            <p className="mt-1 text-[11px] text-slate-400">
-                                Current fleet status
-                            </p>
-                        </div>
-
-                        <div className="my-5 text-center">
-                            <h2 className="text-[32px] font-bold text-[#17233d]">
-                                {total}
-                            </h2>
-                            <span className="text-[11px] text-slate-400">
-                                Total Vehicles
-                            </span>
-                        </div>
-
-                        <div className="mb-7 flex h-[11px] overflow-hidden rounded-full">
-                            <div
-                                className="bg-[#3158c9]"
-                                style={{ width: `${availablePercentage}%` }} />
-                            <div
-                                className="bg-[#f0a43b]"
-                                style={{ width: `${rentedPercentage}%` }} />
-                            <div className="bg-[#ef6666]" style={{ width: `${maintenancePercentage}%` }}
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-4">
-                            {[
-                                {
-                                    label: "Available",
-                                    value: vehicleAvailability.available,
-                                    color: "bg-[#3158c9]",
-                                },
-                                {
-                                    label: "Rented",
-                                    value: vehicleAvailability.rented,
-                                    color: "bg-[#f0a43b]",
-                                },
-                                {
-                                    label: "Maintenance",
-                                    value: vehicleAvailability.maintenance,
-                                    color: "bg-[#ef6666]",
-                                },
-                            ].map((item) => (
+                                    className="bg-[#3158c9]"
+                                    style={{ width: `${availablePercentage}%` }}
+                                />
                                 <div
-                                    key={item.label}
-                                    className="flex items-center gap-2 text-xs text-slate-500"
-                                >
-                                    <span className={`h-[9px] w-[9px] rounded-full ${item.color}`} />
-                                    <span>{item.label}</span>
-                                    <strong className="ml-auto text-[#17233d]">
-                                        {item.value}
-                                    </strong>
-                                </div>
-                            ))}
-                        </div>
-                    </section >
-                </div >
-
-                {/* Recent Bookings */}
-                < section className="overflow-hidden rounded-xl border border-slate-200 bg-white" >
-                    <div className="flex flex-wrap items-center justify-between gap-3 p-5">
-                        <div>
-                            <h3 className="text-[15px] font-semibold text-[#17233d]">
-                                Recent Bookings
-                            </h3>
-                            <p className="mt-1 text-[11px] text-slate-400">
-                                Latest booking transactions
-                            </p>
-                        </div>
-
-                        <button
-                            type="button"
-                            className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800"
-                        >
-                            <Eye size={15} />
-                            View All
-                        </button>
-                    </div>
-
-                    <DataTable
-                        columns={bookingColumns}
-                        data={bookings}
-                    />
-                </section >
-
-                {/* Recent Activities */}
-                < section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6" >
-                    <div className="mb-5">
-                        <h3 className="text-[15px] font-semibold text-[#17233d]">
-                            Recent Activities
-                        </h3>
-                        <p className="mt-1 text-[11px] text-slate-400">
-                            Latest updates from your business
-                        </p>
-                    </div>
-
-                    <div className="flex flex-col">
-                        {activities.map((activity) => {
-                            const Icon = activity.icon;
-
-                            const activityStyles = {
-                                green: "bg-green-50 text-green-600",
-                                blue: "bg-blue-50 text-blue-600",
-                                orange: "bg-orange-50 text-orange-600",
-                            };
-
-                            return (
+                                    className="bg-[#f0a43b]"
+                                    style={{ width: `${rentedPercentage}%` }}
+                                />
                                 <div
-                                    key={activity.id}
-                                    className="flex items-center gap-3 border-b border-slate-100 py-4 last:border-0"
-                                >
+                                    className="bg-[#ef6666]"
+                                    style={{ width: `${maintenancePercentage}%` }}
+                                />
+                            </div>
+
+                            <div className="flex min-h-0 flex-col justify-around gap-2">
+                                {[
+                                    {
+                                        label: "Available",
+                                        value: vehicleAvailability.available,
+                                        color: "bg-[#3158c9]",
+                                    },
+                                    {
+                                        label: "Rented",
+                                        value: vehicleAvailability.rented,
+                                        color: "bg-[#f0a43b]",
+                                    },
+                                    {
+                                        label: "Maintenance",
+                                        value: vehicleAvailability.maintenance,
+                                        color: "bg-[#ef6666]",
+                                    },
+                                ].map((item) => (
                                     <div
-                                        className={`grid h-[38px] w-[38px] shrink-0 place-items-center rounded-xl${activityStyles[activity.color]
-                                            }`}
+                                        key={item.label}
+                                        className="flex items-center gap-2 text-[11px] text-slate-500"
                                     >
-                                        <Icon size={18} />
+                                        <span className={`h-2 w-2 rounded-full ${item.color}`} />
+                                        <span>{item.label}</span>
+                                        <strong className="ml-auto text-[11px] font-semibold text-[#17233d]">
+                                            {item.value}
+                                        </strong>
                                     </div>
+                                ))}
+                            </div>
+                        </section>
+                    </div>
 
-                                    <div className="min-w-0 flex-1">
-                                        <h4 className="text-xs font-semibold text-slate-700">
-                                            {activity.title}
-                                        </h4>
-                                        <p className="mt-1 text-[11px] text-slate-400">
-                                            {activity.description}
-                                        </p>
-                                    </div>
-
-                                    <span className="hidden shrink-0 items-center gap-1 text-[10px] text-slate-400 sm:flex">
-                                        <Clock size={13} />
-                                        {activity.time}
-                                    </span>
+                    {/* Recent bookings and activities */}
+                    <div className="grid min-h-0 grid-cols-1 gap-3 lg:grid-cols-[1.65fr_1fr]">
+                        <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
+                            <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-3">
+                                <div>
+                                    <h3 className="text-[13px] font-semibold text-[#17233d]">
+                                        Recent Bookings
+                                    </h3>
+                                    <p className="mt-0.5 text-[10px] text-slate-400">
+                                        Latest booking transactions
+                                    </p>
                                 </div>
-                            );
-                        })}
-                    </div >
-                </section >
 
-            </div >
-        </AdminLayout >
+                                <button
+                                    type="button"
+                                    onClick={() => navigate("/bookings")}
+                                    className="flex shrink-0 items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800"
+                                >
+                                    <Eye size={13} />
+                                    View All
+                                </button>
+                            </div>
+
+                            <div className="min-h-0 flex-1 overflow-hidden">
+                                <DataTable
+                                    columns={bookingColumns}
+                                    data={bookings}
+                                    compact
+                                    pageSize={4}
+                                />
+                            </div>
+                        </section>
+
+                        <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-4">
+                            <div className="mb-2 shrink-0">
+                                <h3 className="text-[13px] font-semibold text-[#17233d]">
+                                    Recent Activities
+                                </h3>
+                                <p className="mt-0.5 text-[10px] text-slate-400">
+                                    Latest updates from your business
+                                </p>
+                            </div>
+
+                            <div className="flex min-h-0 flex-1 flex-col justify-around overflow-hidden">
+                                {activities.map((activity) => {
+                                    const Icon = activity.icon;
+
+                                    return (
+                                        <div
+                                            key={activity.id}
+                                            className="flex min-w-0 items-center gap-2.5 border-b border-slate-100 py-2 last:border-0"
+                                        >
+                                            <div
+                                                className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
+                                                    activityStyles[activity.color] ||
+                                                    "bg-slate-50 text-slate-600"
+                                                }`}
+                                            >
+                                                <Icon size={15} />
+                                            </div>
+
+                                            <div className="min-w-0 flex-1">
+                                                <h4 className="truncate text-[11px] font-semibold text-slate-700">
+                                                    {activity.title}
+                                                </h4>
+                                                <p className="mt-0.5 truncate text-[10px] text-slate-400">
+                                                    {activity.description}
+                                                </p>
+                                            </div>
+
+                                            <span className="hidden shrink-0 items-center gap-1 text-[9px] text-slate-400 sm:flex">
+                                                <Clock size={11} />
+                                                {activity.time}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </AdminLayout>
     );
 }
 
