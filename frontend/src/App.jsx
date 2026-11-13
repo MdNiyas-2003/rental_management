@@ -24,7 +24,7 @@ function App() {
     element={<VehiclePickupReturn />}
 />
                 <Route path="/maintenance" element={<Maintenance/>}/>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
         </BrowserRouter>
