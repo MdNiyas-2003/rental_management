@@ -10,6 +10,7 @@ function AdminLayout({ children }) {
   const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
+    
     <div className="flex min-h-screen w-full min-w-0 box-border overflow-x-hidden bg-[#f5f7fb]">
       {/* Mobile overlay */}
       {isSidebarOpen && (

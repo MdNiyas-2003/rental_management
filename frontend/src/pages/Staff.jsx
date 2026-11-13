@@ -38,6 +38,7 @@ function Staff() {
         setViewStaff,
         deleteStaff,
         form,
+        fetchStaff,
         openAddModal,
         openEditModal,
         closeModal,

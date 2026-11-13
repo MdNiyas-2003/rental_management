@@ -19,6 +19,7 @@ import AdminLayout from "../layouts/AdminLayout";
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import useMaintenance from "../hooks/useMaintenance";
+import SearchableDropdown from "../components/SearchableDropdown";
 
 import {
     maintenanceServiceTypes,
@@ -65,6 +66,8 @@ function MaintenanceTableSkeleton() {
 }
 
 // TOP RIGHT SNACKBAR
+
+// TOP RIGHT SNACKBAR
 function MaintenanceSnackbar({ notification, onClose }) {
     if (!notification) return null;
 
@@ -73,37 +76,38 @@ function MaintenanceSnackbar({ notification, onClose }) {
     return (
         <div
             role="alert"
-            className={`fixed right-6 top-20 z-[2000] flex w - [340px] max - w - [calc(100vw - 32px)] items - center gap - 3 rounded - lg border px - 4 py - 3 shadow - xl ${isError
-                    ? "border-red-300 bg-red-100"
-                    : "border-green-300 bg-green-100"
-                }`
-            } > <div className={`flex h- 9 w - 9 shrink - 0 items - center justify - center rounded - full ${isError ? "bg-red-200 text-red-700" : "bg-green-200 text-green-700"}`}
+            className={`fixed right-5 top-20 z-[2000] flex w-[340px] max-w-[calc(100vw-32px)] items-center gap-3 rounded-lg border p-3 shadow-lg ${
+                isError
+                    ? "border-red-200 bg-red-50"
+                    : "border-green-200 bg-green-50"
+            }`}
+        >
+            <div
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                    isError
+                        ? "bg-red-100 text-red-600"
+                        : "bg-green-100 text-green-600"
+                }`}
             >
-                {
-                    isError ? (
-                        <AlertCircle size={20} />
-                    ) : (
-                        <CheckCircle size={20} />
-                    )}
-            </div >
-
-            <div className="min-w-0 flex-1">
-                <p
-                    className={`text-sm font-semibold ${isError ? "text-red-700" : "text-green-700"
-                        }`}
-                >
-                    {isError ? "Operation Failed" : "Success"}
-                </p>
-
-                <p className="mt-0.5 break-words text-[13px] font-medium text-slate-600">
-                    {notification.message}
-                </p>
+                {isError ? (
+                    <AlertCircle size={17} />
+                ) : (
+                    <CheckCircle size={17} />
+                )}
             </div>
+
+            <p
+                className={`flex-1 text-xs font-medium ${
+                    isError ? "text-red-700" : "text-green-700"
+                }`}
+            >
+                {notification.message}
+            </p>
 
             <button
                 type="button"
                 onClick={onClose}
-                className="shrink-0 rounded-md p-1 text-slate-500 hover:bg-white/50"
+                className="text-slate-400 hover:text-slate-700"
                 aria-label="Close notification"
             >
                 <X size={16} />
@@ -111,6 +115,7 @@ function MaintenanceSnackbar({ notification, onClose }) {
         </div>
     );
 }
+
 
 // SUMMARY CARD
 function SummaryCard({ title, value, icon: Icon, style, loading }) {
@@ -319,17 +324,25 @@ export default function Maintenance() {
             <div className="mx-auto flex min-h-[calc(100dvh-135px)] w-full max-w-[1600px] flex-col gap-2">
 
                 {/* HEADER */}
-                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                        <h1 className="text-xl font-bold text-[#17243b]">Maintenance</h1>
-                        <p className="mt-0.5 text-xs text-slate-500">Manage vehicle services and maintenance history.</p>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h1 className="text-xl font-bold text-[#17243b]">
+                            Maintenance
+                        </h1>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                            Manage vehicle services and maintenance history.
+                        </p>
                     </div>
-                    <div className="flex w-full justify-end sm:w-auto">
-                        <button type="button" onClick={openAddModal} disabled={loading || vehicles.length === 0}
-                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#3158c9] px-4 text-xs font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50">
-                            <Plus size={15} /> Add Maintenance
-                        </button>
-                    </div>
+
+                    <button
+                        type="button"
+                        onClick={openAddModal}
+                        disabled={loading || vehicles.length === 0}
+                        className="flex items-center justify-center gap-1.5 rounded-lg bg-[#3158c9] px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <Plus size={15} />
+                        Add Maintenance
+                    </button>
                 </div>
 
                 {/* SUMMARY CARDS */}
@@ -515,27 +528,18 @@ export default function Maintenance() {
                                             Select Vehicle *
                                         </label>
 
-                                        <select
-                                            required
+                                        <SearchableDropdown
                                             value={form.vehicleId}
-                                            onChange={(e) =>
-                                                handleChange("vehicleId", e.target.value)
-                                            }
-                                            className={inputClass}
-                                        >
-                                            <option value="">
-                                                Select vehicle
-                                            </option>
-
-                                            {vehicles.map((vehicle) => (
-                                                <option
-                                                    key={vehicle.id}
-                                                    value={vehicle.id}
-                                                >
-                                                    {vehicle.name} - {vehicle.number}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            onChange={(value) => handleChange("vehicleId", value)}
+                                            options={vehicles.map((vehicle) => ({
+                                                value: vehicle.id,
+                                                label: `${vehicle.name} - ${vehicle.number}`,
+                                                keywords: `${vehicle.name} ${vehicle.number} ${vehicle.category || ""}`,
+                                            }))}
+                                            placeholder="Select vehicle"
+                                            searchPlaceholder="Search vehicle name or registration..."
+                                            className="min-h-[36px]"
+                                        />
                                     </div>
 
                                     {/* SERVICE TYPE */}

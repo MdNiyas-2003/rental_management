@@ -3,6 +3,8 @@ import {
     TrendingDown,
     Clock,
     Eye,
+    AlertCircle,
+    X,
     CarFront,
     Users,
     CalendarDays,
@@ -34,9 +36,8 @@ const bookingColumns = [
 
             return (
                 <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-                        styles[value] || "bg-slate-100 text-slate-600"
-                    }`}
+                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${styles[value] || "bg-slate-100 text-slate-600"
+                        }`}
                 >
                     {value}
                 </span>
@@ -58,21 +59,70 @@ const activityStyles = {
     orange: "bg-orange-50 text-orange-600",
 };
 
+function DashboardSnackbar({ notification, onClose }) {
+    if (!notification) return null;
+
+    const isError = notification.type === "error";
+
+    return (
+        <div
+            role="alert"
+            className={`fixed right-5 top-20 z-[2000] flex w-[340px] max-w-[calc(100vw-32px)] items-center gap-3 rounded-lg border p-3 shadow-lg ${
+                isError
+                    ? "border-red-200 bg-red-50"
+                    : "border-green-200 bg-green-50"
+            }`}
+        >
+            <div
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                    isError
+                        ? "bg-red-100 text-red-600"
+                        : "bg-green-100 text-green-600"
+                }`}
+            >
+                {isError ? (
+                    <AlertCircle size={17} />
+                ) : (
+                    <CheckCircle size={17} />
+                )}
+            </div>
+
+            <p
+                className={`flex-1 text-xs font-medium ${
+                    isError ? "text-red-700" : "text-green-700"
+                }`}
+            >
+                {notification.message}
+            </p>
+
+            <button
+                type="button"
+                onClick={onClose}
+                className="text-slate-400 hover:text-slate-700"
+                aria-label="Close notification"
+            >
+                <X size={16} />
+            </button>
+        </div>
+    );
+}
+
 function Dashboard() {
     const navigate = useNavigate();
 
-    const {
-        statistics,
-        revenueData,
-        vehicleAvailability,
-        bookings,
-        activities,
-        selectedYear,
-        handleYearChange,
-        loading,
-        error,
-        refreshDashboard,
-    } = useDashboard();
+  const {
+    statistics,
+    revenueData,
+    vehicleAvailability,
+    bookings,
+    activities,
+    selectedYear,
+    handleYearChange,
+    loading,
+    notification,
+    dismissNotification,
+    refreshDashboard,
+} = useDashboard();
 
     const total = Math.max(vehicleAvailability.total, 1);
     const availablePercentage = (vehicleAvailability.available / total) * 100;
@@ -81,6 +131,10 @@ function Dashboard() {
 
     return (
         <AdminLayout>
+            <DashboardSnackbar
+    notification={notification}
+    onClose={dismissNotification}
+/>
             <div className="flex min-h-[calc(100dvh-135px)] flex-col gap-3 overflow-x-hidden overflow-y-auto xl:h-[calc(100dvh-135px)] xl:min-h-0 xl:overflow-hidden">
                 {/* Page heading */}
                 <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -95,23 +149,12 @@ function Dashboard() {
 
                     <div className="flex w-full justify-end sm:w-auto">
                         <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] text-slate-600">
-                        {new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                            {new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                         </div>
                     </div>
                 </div>
 
-                {error && (
-                    <div className="flex shrink-0 items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700">
-                        <span>{error}</span>
-                        <button
-                            type="button"
-                            onClick={refreshDashboard}
-                            className="shrink-0 font-semibold underline"
-                        >
-                            Retry
-                        </button>
-                    </div>
-                )}
+               
 
                 {/* Statistics */}
                 <div className="grid shrink-0 grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
@@ -123,49 +166,47 @@ function Dashboard() {
                             />
                         ))
                         : statistics.map((item) => {
-                        const Icon = item.icon;
+                            const Icon = item.icon;
 
-                        return (
-                            <div
-                                key={item.title}
-                                className="flex min-h-[76px] min-w-0 items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 sm:min-h-[82px] sm:px-4 sm:py-3"
-                            >
-                                <div className="min-w-0">
-                                    <p className="truncate text-[11px] text-slate-500">
-                                        {item.title}
-                                    </p>
-                                    <h2 className="mt-1 text-lg font-bold leading-tight text-[#17233d] sm:text-xl">
-                                        {item.value}
-                                    </h2>
-                                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                                        <span
-                                            className={`flex items-center gap-0.5 text-[10px] font-semibold ${
-                                                item.positive ? "text-green-600" : "text-red-500"
+                            return (
+                                <div
+                                    key={item.title}
+                                    className="flex min-h-[76px] min-w-0 items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 sm:min-h-[82px] sm:px-4 sm:py-3"
+                                >
+                                    <div className="min-w-0">
+                                        <p className="truncate text-[11px] text-slate-500">
+                                            {item.title}
+                                        </p>
+                                        <h2 className="mt-1 text-lg font-bold leading-tight text-[#17233d] sm:text-xl">
+                                            {item.value}
+                                        </h2>
+                                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                                            <span
+                                                className={`flex items-center gap-0.5 text-[10px] font-semibold ${item.positive ? "text-green-600" : "text-red-500"
+                                                    }`}
+                                            >
+                                                {item.positive ? (
+                                                    <TrendingUp size={12} />
+                                                ) : (
+                                                    <TrendingDown size={12} />
+                                                )}
+                                                {item.change}
+                                            </span>
+                                            <span className="text-[9px] text-slate-400">
+                                                {item.description}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        className={`grid h-9 w-9 translate-y-4 shrink-0 place-items-center rounded-lg ${statIconStyles[item.color] || "bg-slate-50 text-slate-600"
                                             }`}
-                                        >
-                                            {item.positive ? (
-                                                <TrendingUp size={12} />
-                                            ) : (
-                                                <TrendingDown size={12} />
-                                            )}
-                                            {item.change}
-                                        </span>
-                                        <span className="text-[9px] text-slate-400">
-                                            {item.description}
-                                        </span>
+                                    >
+                                        <Icon size={18} />
                                     </div>
                                 </div>
-
-                                <div
-                                   className={`grid h-9 w-9 translate-y-4 shrink-0 place-items-center rounded-lg ${
-                                        statIconStyles[item.color] || "bg-slate-50 text-slate-600"
-                                    }`}
-                                >
-                                    <Icon size={18} />
-                                </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
                 </div>
 
                 {/* Dashboard content: two compact rows */}
@@ -202,9 +243,8 @@ function Dashboard() {
                                         <div className="flex min-h-0 w-full flex-1 items-end">
                                             <div
                                                 title={`${item.month}: ${item.height}%`}
-                                                className={`w-full rounded-t-sm ${
-                                                    index % 2 === 0 ? "bg-blue-600" : "bg-blue-300"
-                                                }`}
+                                                className={`w-full rounded-t-sm ${index % 2 === 0 ? "bg-blue-600" : "bg-blue-300"
+                                                    }`}
                                                 style={{
                                                     height: `${item.height}%`,
                                                     minHeight: "5px",
@@ -359,10 +399,9 @@ function Dashboard() {
                                             className="flex min-w-0 items-center gap-2.5 border-b border-slate-100 py-2 last:border-0"
                                         >
                                             <div
-                                                className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
-                                                    activityStyles[activity.color] ||
+                                                className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${activityStyles[activity.color] ||
                                                     "bg-slate-50 text-slate-600"
-                                                }`}
+                                                    }`}
                                             >
                                                 <Icon size={15} />
                                             </div>

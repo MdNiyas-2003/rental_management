@@ -69,35 +69,38 @@ function VehicleSnackbar({ notification, onClose }) {
     return (
         <div
             role="alert"
-            className={`fixed right-6 top-20 z-[2000] flex w-[340px] max-w-[calc(100vw-32px)] items-center gap-3 rounded-lg border px-4 py-3 shadow-xl ${isError
-                    ? "border-red-300 bg-red-100"
-                    : "border-green-300 bg-green-100"
-                }`}><div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${isError ? "bg-red-200 text-red-700" : "bg-green-200 text-green-700"}`}
-                >
+            className={`fixed right-5 top-20 z-[2000] flex w-[340px] max-w-[calc(100vw-32px)] items-center gap-3 rounded-lg border p-3 shadow-lg ${
+                isError
+                    ? "border-red-200 bg-red-50"
+                    : "border-green-200 bg-green-50"
+            }`}
+        >
+            <div
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                    isError
+                        ? "bg-red-100 text-red-600"
+                        : "bg-green-100 text-green-600"
+                }`}
+            >
                 {isError ? (
-                    <AlertCircle size={20} />
+                    <AlertCircle size={17} />
                 ) : (
-                    <CheckCircle size={20} />
+                    <CheckCircle size={17} />
                 )}
             </div>
 
-            <div className="min-w-0 flex-1">
-                <p
-                    className={`text-sm font-semibold ${isError ? "text-red-700" : "text-green-700"}`}
-                >
-                    {isError ? "Operation Failed" : "Success"}
-                </p>
-
-                <p className="mt-0.5 break-words text-[13px] font-medium text-slate-600">
-                    {notification.message}
-                </p>
-            </div>
+            <p
+                className={`flex-1 text-xs font-medium ${
+                    isError ? "text-red-700" : "text-green-700"
+                }`}
+            >
+                {notification.message}
+            </p>
 
             <button
                 type="button"
                 onClick={onClose}
-                className="shrink-0 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                aria-label="Close notification"
+                className="text-slate-400 hover:text-slate-700"
             >
                 <X size={16} />
             </button>

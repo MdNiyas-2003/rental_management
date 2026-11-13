@@ -18,6 +18,7 @@ import {
 
 import AdminLayout from "../layouts/AdminLayout";
 import useRental from "../hooks/useRental";
+import SearchableDropdown from "../components/SearchableDropdown";
 
 const API_URL = (
     import.meta.env.VITE_API_URL || "http://localhost:5000/api"
@@ -189,6 +190,53 @@ function SummaryRow({ label, value, strong = false, color = "text-slate-700" }) 
     );
 }
 
+function VehicleSnackbar({ notification, onClose }) {
+    if (!notification) return null;
+
+    const isError = notification.type === "error";
+
+    return (
+        <div
+            role="alert"
+            className={`fixed right-5 top-20 z-[2000] flex w-[340px] max-w-[calc(100vw-32px)] items-center gap-3 rounded-lg border p-3 shadow-lg ${
+                isError
+                    ? "border-red-200 bg-red-50"
+                    : "border-green-200 bg-green-50"
+            }`}
+        >
+            <div
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                    isError
+                        ? "bg-red-100 text-red-600"
+                        : "bg-green-100 text-green-600"
+                }`}
+            >
+                {isError ? (
+                    <AlertCircle size={17} />
+                ) : (
+                    <CheckCircle size={17} />
+                )}
+            </div>
+
+            <p
+                className={`flex-1 text-xs font-medium ${
+                    isError ? "text-red-700" : "text-green-700"
+                }`}
+            >
+                {notification.message}
+            </p>
+
+            <button
+                type="button"
+                onClick={onClose}
+                className="text-slate-400 hover:text-slate-700"
+            >
+                <X size={16} />
+            </button>
+        </div>
+    );
+}
+
 function VehiclePickupReturn() {
     const [activeTab, setActiveTab] = useState("pickup");
     const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -352,72 +400,63 @@ function VehiclePickupReturn() {
         <AdminLayout>
             <div className="mx-auto flex h-[calc(100dvh-135px)] min-h-0 w-full max-w-[1600px] flex-col gap-3 overflow-hidden">
 
-                {/* PAGE HEADER */}
-                <div className="flex shrink-0 flex-col gap-3">
-                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="min-w-0">
-                            <h1 className="text-xl font-bold text-[#17243b]">Vehicle Pickup & Return</h1>
-                            <p className="mt-0.5 text-xs text-slate-500">
-                                Manage vehicle handover, inspections and rental returns.
-                            </p>
-                        </div>
-                        <div className="flex w-full justify-end sm:w-auto">
-                            <button
-                                type="button"
-                                onClick={refresh}
-                                disabled={loading}
-                                className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                            >
-                                <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-                                Refresh
-                            </button>
-                        </div>
+                {/* HEADER AND TABS */}
+                <div className="flex shrink-0 items-center justify-between gap-4 max-[700px]:flex-col max-[700px]:items-start">
+
+                    <div className="min-w-0">
+                        <h1 className="text-xl font-bold text-[#17243b]">
+                            Vehicle Pickup & Return
+                        </h1>
+
+                        <p className="mt-0.5 text-xs text-slate-500">
+                            Manage vehicle handover, inspections and rental returns.
+                        </p>
                     </div>
 
-                    {/* RESPONSIVE SEGMENTED TABS */}
-                    <div className="grid w-full grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-white p-1 sm:inline-flex sm:w-fit sm:gap-1">
-                        {tabs.map((tab) => {
-                            const Icon = tab.icon;
-                            const isActive = activeTab === tab.id;
+                    <div className="flex flex-wrap items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={refresh}
+                            disabled={loading}
+                            className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                        >
+                            <RefreshCw
+                                size={15}
+                                className={loading ? "animate-spin" : ""}
+                            />
+                            Refresh
+                        </button>
 
-                            return (
-                                <button
-                                    key={tab.id}
-                                    type="button"
-                                    onClick={() => setActiveTab(tab.id)}
-                                    aria-pressed={isActive}
-                                    className={`flex min-w-0 h-10 items-center justify-center gap-1.5 rounded-lg px-1.5 text-[11px] font-semibold transition sm:px-4 sm:text-xs ${
-                                        isActive
-                                            ? "bg-[#3158c9] text-white shadow-sm"
-                                            : "text-slate-600 hover:bg-slate-100"
-                                    }`}
-                                >
-                                    <Icon size={15} className="shrink-0" />
-                                    <span className="truncate">{tab.id === "pickup" ? "Pickup" : tab.id === "return" ? "Return" : "Invoices"}</span>
-                                </button>
-                            );
-                        })}
+                        <div className="flex shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white p-1">
+                            {tabs.map((tab) => {
+                                const Icon = tab.icon;
+                                const isActive = activeTab === tab.id;
+
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        type="button"
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex h-10 items-center gap-2 rounded-lg px-4 text-xs font-semibold transition ${
+                                            isActive
+                                                ? "bg-[#3158c9] text-white"
+                                                : "text-slate-600 hover:bg-slate-100"
+                                        }`}
+                                    >
+                                        <Icon size={16} />
+                                        {tab.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
 
-                {/* TOP-RIGHT AUTO-DISMISSING NOTIFICATION */}
-                {notification && (
-                    <div className={`fixed right-5 top-20 z-[90] flex w-[min(380px,calc(100vw-2rem))] items-center gap-3 rounded-xl border p-3 shadow-xl ${notification.type === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-green-200 bg-green-50 text-green-700"}`} role="alert">
-                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${notification.type === "error" ? "bg-red-100" : "bg-green-100"}`}>
-                            {notification.type === "error" ? <AlertCircle size={17} /> : <CheckCircle size={17} />}
-                        </span>
-                        <p className="flex-1 text-xs font-semibold">{notification.message}</p>
-                        <button type="button" onClick={dismissNotification} className="rounded-md p-1 font-bold hover:bg-black/5" aria-label="Dismiss notification">
-                            <X size={15} />
-                        </button>
-                    </div>
-                )}
 
-                {error && (
-                    <div className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
-                        {error}
-                    </div>
-                )}
+               <VehicleSnackbar
+    notification={notification}
+    onClose={dismissNotification}
+/>
 
                 {/* MAIN CARD */}
                 <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -446,26 +485,19 @@ function VehiclePickupReturn() {
                                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
 
                                         <Field label="Select Confirmed Booking *">
-                                            <select
+                                            <SearchableDropdown
                                                 value={selectedBookingId}
-                                                onChange={(e) => setSelectedBookingId(e.target.value)}
-                                                required
+                                                onChange={setSelectedBookingId}
                                                 disabled={loading || pickupBookings.length === 0}
-                                                className={inputClass}
-                                            >
-                                                <option value="">
-                                                    Select booking
-                                                </option>
-
-                                                {pickupBookings.map((booking) => (
-                                                    <option
-                                                        key={booking.id}
-                                                        value={booking.id}
-                                                    >
-                                                        {booking.bookingId} - {booking.customerName} - {booking.vehicleName}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                                options={pickupBookings.map((booking) => ({
+                                                    value: booking.id,
+                                                    label: `${booking.bookingId} - ${booking.customerName} - ${booking.vehicleName}`,
+                                                    keywords: `${booking.bookingId} ${booking.customerName} ${booking.vehicleName}`,
+                                                }))}
+                                                placeholder="Select booking"
+                                                searchPlaceholder="Search booking ID, customer or vehicle..."
+                                                className="min-h-[36px]"
+                                            />
 
                                             {pickupBookings.length === 0 && !loading && (
                                                 <p className="mt-1 text-[11px] text-amber-600">
@@ -712,26 +744,19 @@ function VehiclePickupReturn() {
                                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
 
                                         <Field label="Select Active Rental *">
-                                            <select
+                                            <SearchableDropdown
                                                 value={selectedRentalId}
-                                                onChange={(e) => setSelectedRentalId(e.target.value)}
-                                                required
+                                                onChange={setSelectedRentalId}
                                                 disabled={loading || activeRentals.length === 0}
-                                                className={inputClass}
-                                            >
-                                                <option value="">
-                                                    Select active rental
-                                                </option>
-
-                                                {activeRentals.map((rental) => (
-                                                    <option
-                                                        key={rental.id}
-                                                        value={rental.id}
-                                                    >
-                                                        {rental.bookingCode} - {rental.customerName} - {rental.vehicleName}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                                options={activeRentals.map((rental) => ({
+                                                    value: rental.id,
+                                                    label: `${rental.bookingCode} - ${rental.customerName} - ${rental.vehicleName}`,
+                                                    keywords: `${rental.bookingCode} ${rental.customerName} ${rental.vehicleName}`,
+                                                }))}
+                                                placeholder="Select active rental"
+                                                searchPlaceholder="Search booking ID, customer or vehicle..."
+                                                className="min-h-[36px]"
+                                            />
 
                                             {activeRentals.length === 0 && !loading && (
                                                 <p className="mt-1 text-[11px] text-amber-600">

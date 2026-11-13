@@ -20,6 +20,7 @@ import AdminLayout from "../layouts/AdminLayout";
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import useBookings from "../hooks/useBookings";
+import SearchableDropdown from "../components/SearchableDropdown";
 
 const money = (value) =>
     new Intl.NumberFormat("en-IN", {
@@ -310,19 +311,33 @@ export default function Bookings() {
                 )}
 
                 {/* Page Heading */}
-                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                        <h1 className="text-xl font-bold text-[#17243b]">Bookings</h1>
-                        <p className="mt-0.5 text-xs text-slate-500">Manage vehicle reservations and rental bookings.</p>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h1 className="text-xl font-bold text-[#17243b]">
+                            Bookings
+                        </h1>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                            Manage vehicle reservations and rental bookings.
+                        </p>
                     </div>
-                    <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
-                        <button type="button" onClick={loadData}
-                            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600 hover:bg-slate-50">
-                            <RefreshCw size={14} /> Refresh
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={loadData}
+                            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                        >
+                            <RefreshCw size={14} />
+                            Refresh
                         </button>
-                        <button type="button" onClick={openCreateModal}
-                            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#3158c9] px-4 text-xs font-semibold text-white hover:bg-blue-800">
-                            <Plus size={15} /> New Booking
+
+                        <button
+                            type="button"
+                            onClick={openCreateModal}
+                            className="flex items-center gap-1.5 rounded-lg bg-[#3158c9] px-3 py-2 text-xs font-semibold text-white hover:bg-blue-800"
+                        >
+                            <Plus size={15} />
+                            New Booking
                         </button>
                     </div>
                 </div>
@@ -465,50 +480,36 @@ export default function Bookings() {
                         <div className="flex min-w-0 flex-col gap-1.5">
                             <label className={labelClass}>Customer *</label>
 
-                            <select
+                            <SearchableDropdown
                                 value={form.customerId}
-                                onChange={(e) =>
-                                    setField("customerId", e.target.value)
-                                }
-                                required
-                                className={inputClass}
-                            >
-                                <option value="">Select Customer</option>
-
-                                {customers.map((customer) => (
-                                    <option
-                                        key={customer.id}
-                                        value={customer.id}
-                                    >
-                                        {customer.name || "Customer"}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={(value) => setField("customerId", value)}
+                                options={customers.map((customer) => ({
+                                    value: customer.id,
+                                    label: customer.name || "Customer",
+                                    keywords: `${customer.email || ""} ${customer.phone || ""}`,
+                                }))}
+                                placeholder="Select customer"
+                                searchPlaceholder="Search customer name, phone or email..."
+                                className="min-h-[36px]"
+                            />
                         </div>
 
                         {/* Vehicle - name only */}
                         <div className="flex min-w-0 flex-col gap-1.5">
                             <label className={labelClass}>Vehicle *</label>
 
-                            <select
+                            <SearchableDropdown
                                 value={form.vehicleId}
-                                onChange={(e) =>
-                                    setField("vehicleId", e.target.value)
-                                }
-                                required
-                                className={inputClass}
-                            >
-                                <option value="">Select Vehicle</option>
-
-                                {availableVehicles.map((vehicle) => (
-                                    <option
-                                        key={vehicle.id}
-                                        value={vehicle.id}
-                                    >
-                                        {vehicle.name}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={(value) => setField("vehicleId", value)}
+                                options={availableVehicles.map((vehicle) => ({
+                                    value: vehicle.id,
+                                    label: vehicle.name,
+                                    keywords: `${vehicle.number || ""} ${vehicle.category || ""}`,
+                                }))}
+                                placeholder="Select vehicle"
+                                searchPlaceholder="Search vehicle name or registration..."
+                                className="min-h-[36px]"
+                            />
                         </div>
 
                         {/* Auto fetched vehicle information */}

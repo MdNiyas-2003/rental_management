@@ -148,27 +148,31 @@ export default function useRental() {
         return () => window.clearTimeout(timeoutId);
     }, [notification]);
 
-    const loadData = useCallback(async () => {
-        setLoading(true);
-        setError("");
+   const loadData = useCallback(async () => {
+    setLoading(true);
+    setError("");
 
-        try {
-            const [bookingResult, rentalResult, invoiceResult] = await Promise.all([
-                apiRequest(`${API_URL}/rentals/pickup-bookings`),
-                apiRequest(`${API_URL}/rentals/active`),
-                apiRequest(`${API_URL}/invoices`),
-            ]);
+    try {
+        const [bookingResult, rentalResult, invoiceResult] = await Promise.all([
+            apiRequest(`${API_URL}/rentals/pickup-bookings`),
+            apiRequest(`${API_URL}/rentals/active`),
+            apiRequest(`${API_URL}/invoices`),
+        ]);
 
-            setPickupBookings(getData(bookingResult).map(mapBooking));
-            setActiveRentals(getData(rentalResult).map(mapRental));
-            setInvoices(getData(invoiceResult).map(mapInvoice));
-        } catch (err) {
-            setError(err.message || "Unable to load rental data.");
-            console.error("Rental data loading error:", err);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+        setPickupBookings(getData(bookingResult).map(mapBooking));
+        setActiveRentals(getData(rentalResult).map(mapRental));
+        setInvoices(getData(invoiceResult).map(mapInvoice));
+    } catch (err) {
+        const message = err.message || "Unable to load rental data.";
+
+        setError(message);
+        notify(message, "error");
+
+        console.error("Rental data loading error:", err);
+    } finally {
+        setLoading(false);
+    }
+}, [notify]);
 
     useEffect(() => {
         loadData();
