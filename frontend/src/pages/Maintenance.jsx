@@ -319,25 +319,17 @@ export default function Maintenance() {
             <div className="mx-auto flex min-h-[calc(100dvh-135px)] w-full max-w-[1600px] flex-col gap-2">
 
                 {/* HEADER */}
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                        <h1 className="text-xl font-bold text-[#17243b]">
-                            Maintenance
-                        </h1>
-                        <p className="mt-0.5 text-xs text-slate-500">
-                            Manage vehicle services and maintenance history.
-                        </p>
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                        <h1 className="text-xl font-bold text-[#17243b]">Maintenance</h1>
+                        <p className="mt-0.5 text-xs text-slate-500">Manage vehicle services and maintenance history.</p>
                     </div>
-
-                    <button
-                        type="button"
-                        onClick={openAddModal}
-                        disabled={loading || vehicles.length === 0}
-                        className="flex items-center justify-center gap-1.5 rounded-lg bg-[#3158c9] px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        <Plus size={15} />
-                        Add Maintenance
-                    </button>
+                    <div className="flex w-full justify-end sm:w-auto">
+                        <button type="button" onClick={openAddModal} disabled={loading || vehicles.length === 0}
+                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#3158c9] px-4 text-xs font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50">
+                            <Plus size={15} /> Add Maintenance
+                        </button>
+                    </div>
                 </div>
 
                 {/* SUMMARY CARDS */}

@@ -352,55 +352,51 @@ function VehiclePickupReturn() {
         <AdminLayout>
             <div className="mx-auto flex h-[calc(100dvh-135px)] min-h-0 w-full max-w-[1600px] flex-col gap-3 overflow-hidden">
 
-                {/* HEADER AND TABS */}
-                <div className="flex shrink-0 items-center justify-between gap-4 max-[700px]:flex-col max-[700px]:items-start">
-
-                    <div className="min-w-0">
-                        <h1 className="text-xl font-bold text-[#17243b]">
-                            Vehicle Pickup & Return
-                        </h1>
-
-                        <p className="mt-0.5 text-xs text-slate-500">
-                            Manage vehicle handover, inspections and rental returns.
-                        </p>
+                {/* PAGE HEADER */}
+                <div className="flex shrink-0 flex-col gap-3">
+                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                            <h1 className="text-xl font-bold text-[#17243b]">Vehicle Pickup & Return</h1>
+                            <p className="mt-0.5 text-xs text-slate-500">
+                                Manage vehicle handover, inspections and rental returns.
+                            </p>
+                        </div>
+                        <div className="flex w-full justify-end sm:w-auto">
+                            <button
+                                type="button"
+                                onClick={refresh}
+                                disabled={loading}
+                                className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                            >
+                                <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+                                Refresh
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={refresh}
-                            disabled={loading}
-                            className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                        >
-                            <RefreshCw
-                                size={15}
-                                className={loading ? "animate-spin" : ""}
-                            />
-                            Refresh
-                        </button>
+                    {/* RESPONSIVE SEGMENTED TABS */}
+                    <div className="grid w-full grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-white p-1 sm:inline-flex sm:w-fit sm:gap-1">
+                        {tabs.map((tab) => {
+                            const Icon = tab.icon;
+                            const isActive = activeTab === tab.id;
 
-                        <div className="flex shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white p-1">
-                            {tabs.map((tab) => {
-                                const Icon = tab.icon;
-                                const isActive = activeTab === tab.id;
-
-                                return (
-                                    <button
-                                        key={tab.id}
-                                        type="button"
-                                        onClick={() => setActiveTab(tab.id)}
-                                        className={`flex h-10 items-center gap-2 rounded-lg px-4 text-xs font-semibold transition ${
-                                            isActive
-                                                ? "bg-[#3158c9] text-white"
-                                                : "text-slate-600 hover:bg-slate-100"
-                                        }`}
-                                    >
-                                        <Icon size={16} />
-                                        {tab.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
+                            return (
+                                <button
+                                    key={tab.id}
+                                    type="button"
+                                    onClick={() => setActiveTab(tab.id)}
+                                    aria-pressed={isActive}
+                                    className={`flex min-w-0 h-10 items-center justify-center gap-1.5 rounded-lg px-1.5 text-[11px] font-semibold transition sm:px-4 sm:text-xs ${
+                                        isActive
+                                            ? "bg-[#3158c9] text-white shadow-sm"
+                                            : "text-slate-600 hover:bg-slate-100"
+                                    }`}
+                                >
+                                    <Icon size={15} className="shrink-0" />
+                                    <span className="truncate">{tab.id === "pickup" ? "Pickup" : tab.id === "return" ? "Return" : "Invoices"}</span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 

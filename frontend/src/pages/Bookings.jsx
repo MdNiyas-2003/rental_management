@@ -310,33 +310,19 @@ export default function Bookings() {
                 )}
 
                 {/* Page Heading */}
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                        <h1 className="text-xl font-bold text-[#17243b]">
-                            Bookings
-                        </h1>
-                        <p className="mt-0.5 text-xs text-slate-500">
-                            Manage vehicle reservations and rental bookings.
-                        </p>
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                        <h1 className="text-xl font-bold text-[#17243b]">Bookings</h1>
+                        <p className="mt-0.5 text-xs text-slate-500">Manage vehicle reservations and rental bookings.</p>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={loadData}
-                            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
-                        >
-                            <RefreshCw size={14} />
-                            Refresh
+                    <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
+                        <button type="button" onClick={loadData}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                            <RefreshCw size={14} /> Refresh
                         </button>
-
-                        <button
-                            type="button"
-                            onClick={openCreateModal}
-                            className="flex items-center gap-1.5 rounded-lg bg-[#3158c9] px-3 py-2 text-xs font-semibold text-white hover:bg-blue-800"
-                        >
-                            <Plus size={15} />
-                            New Booking
+                        <button type="button" onClick={openCreateModal}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#3158c9] px-4 text-xs font-semibold text-white hover:bg-blue-800">
+                            <Plus size={15} /> New Booking
                         </button>
                     </div>
                 </div>

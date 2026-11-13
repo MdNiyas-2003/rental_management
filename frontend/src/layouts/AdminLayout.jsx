@@ -10,7 +10,7 @@ function AdminLayout({ children }) {
   const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
-    <div className="flex min-h-screen box-border overflow-x-hidden bg-[#f5f7fb]">
+    <div className="flex min-h-screen w-full min-w-0 box-border overflow-x-hidden bg-[#f5f7fb]">
       {/* Mobile overlay */}
       {isSidebarOpen && (
         <div
@@ -28,7 +28,7 @@ function AdminLayout({ children }) {
         <Header onMenuClick={openSidebar} />
 
         {/* Page content */}
-        <main className="w-full min-w-0 flex-1 p-[30px] max-[900px]:p-5 max-[600px]:p-[15px]">
+        <main className="w-full min-w-0 flex-1 p-[30px] max-[900px]:p-5 max-[600px]:p-4">
           {children}
         </main>
       </div>

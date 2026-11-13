@@ -178,7 +178,7 @@ function Invoices() {
 
     return (
         <AdminLayout>
-            <div className="space-y-4 font-sans text-sm">
+            <div className="min-w-0 space-y-4 font-sans text-sm">
 
                 {/* Page Header */}
                 <div>
@@ -191,7 +191,7 @@ function Invoices() {
                 </div>
 
                 {/* Three Tabs */}
-                <div className="inline-flex w-fit max-w-full flex-wrap items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
+                <div className="grid w-full grid-cols-3 gap-1 rounded-xl border border-gray-200 bg-white p-1 sm:inline-flex sm:w-fit">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
@@ -200,7 +200,7 @@ function Invoices() {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`inline-flex min-h-8 flex-none items-center justify-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium transition ${isActive
+                                className={`inline-flex h-10 min-w-0 items-center justify-center gap-1.5 rounded-lg px-1.5 text-[11px] font-semibold transition sm:px-4 sm:text-xs ${isActive
                                         ? "bg-blue-600 text-white"
                                         : "text-gray-600 hover:bg-gray-100"
                                     }`}

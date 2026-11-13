@@ -205,24 +205,17 @@ function Staff() {
                 )}
 
                 {/* Page Heading */}
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                        <h1 className="text-xl font-bold text-[#17243b]">
-                            Staff
-                        </h1>
-                        <p className="mt-0.5 text-xs text-slate-500">
-                            Manage your staff members and login accounts.
-                        </p>
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                        <h1 className="text-xl font-bold text-[#17243b]">Staff</h1>
+                        <p className="mt-0.5 text-xs text-slate-500">Manage your staff members and login accounts.</p>
                     </div>
-
-                    <button
-                        type="button"
-                        onClick={openAddModal}
-                        className="flex items-center justify-center gap-1.5 rounded-lg bg-[#3158c9] px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-800"
-                    >
-                        <Plus size={15} />
-                        Add Staff
-                    </button>
+                    <div className="flex w-full justify-end sm:w-auto">
+                        <button type="button" onClick={openAddModal}
+                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#3158c9] px-4 text-xs font-semibold text-white transition hover:bg-blue-800">
+                            <Plus size={15} /> Add Staff
+                        </button>
+                    </div>
                 </div>
 
                 {/* Summary Cards */}

@@ -277,24 +277,17 @@ function Vehicles() {
             <div className="mx-auto flex min-h-[calc(100dvh-135px)] w-full max-w-[1600px] flex-col gap-2">
 
                 {/* Heading */}
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                        <h1 className="text-xl font-bold text-[#17243b]">
-                            Vehicles
-                        </h1>
-                        <p className="mt-0.5 text-xs text-slate-500">
-                            Manage your rental fleet and vehicle details.
-                        </p>
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                        <h1 className="text-xl font-bold text-[#17243b]">Vehicles</h1>
+                        <p className="mt-0.5 text-xs text-slate-500">Manage your rental fleet and vehicle details.</p>
                     </div>
-
-                    <button
-                        type="button"
-                        onClick={openAddModal}
-                        className="flex items-center justify-center gap-1.5 rounded-lg bg-[#3158c9] px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-800"
-                    >
-                        <Plus size={15} />
-                        Add Vehicle
-                    </button>
+                    <div className="flex w-full justify-end sm:w-auto">
+                        <button type="button" onClick={openAddModal}
+                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#3158c9] px-4 text-xs font-semibold text-white transition hover:bg-blue-800">
+                            <Plus size={15} /> Add Vehicle
+                        </button>
+                    </div>
                 </div>
 
                 {/* Summary Cards */}
